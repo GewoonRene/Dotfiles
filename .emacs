@@ -17,23 +17,23 @@
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 
 (load-theme 'gruvbox t)
-(set-face-attribute 'default nil :font "Fira Code" :height 180)
+(set-face-attribute 'default nil :font "Fira Code" :height 160)
 
 (global-display-line-numbers-mode)
 (setq display-line-numbers-type 'relative)
 
 ;; Vi mode
-;;(require 'evil)
-;;(evil-mode 1)
+(require 'evil)
+(evil-mode 1)
+
+(setq mac-function-modifier 'meta)
+(setq mac-option-modifier nil)
 
 ;; Searching
 (require 'ido)
 
 (ido-mode 1)
 (ido-everywhere 1)
-
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
 
 (setq default-directory "~/")
 
@@ -123,3 +123,4 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
