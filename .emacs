@@ -63,6 +63,7 @@
     :config
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
+    (add-to-list 'company-backends 'company-c-headers)
     (add-to-list #'company-c-headers-path-system "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include")
     (add-to-list #'company-c-headers-path-system "/usr/local/include")
     (global-company-mode t))
