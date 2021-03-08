@@ -10,7 +10,7 @@ These are my dot-files for programs that I actively use.
 
 ### Emacs
 
-<strong> How to fix the header file issue in c-mode? <strong/>
+<strong> How to fix the header file issue in c-mode? <strong/> <br/>
 First go to the root of the project and create a local directory file:
 ```
 M-x add-dir-local-variable RET c-mode RET RET
