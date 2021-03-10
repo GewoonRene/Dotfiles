@@ -1,8 +1,11 @@
-
 (package-initialize)
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+(setq backup-directory-alist '(("." . "~/.emacs_saves")))
+(setq create-lockfiles nil)
+(setq auto-save-default nil)
 
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
@@ -24,13 +27,7 @@
 
 ;; === Editor =======================================================
 (global-display-line-numbers-mode)
-(setq indent-tabs-mode nil)
-(setq tab-width 4)
-(setq indent-line-function 'insert-tab)
-(setq-default c-basic-offset 4
-	      c-default-style '((java-mode . "java")
-                                (awk-mode . "awk")
-                                (other . "bsd")))
+(setq display-line-numbers-type 'relative)
 
 ;; === Vi mode =======================================================
 (use-package evil
@@ -50,22 +47,21 @@
 
 ;; === Auto Completing ================================================
 (require 'company-c-headers)
-(require 'company-irony)
 (require 'company-capf)
 
 (use-package company
     :init
-    (setq company-backends '((company-irony company-c-headers company-capf)))
+    (setq company-backends '((company-capf company-c-headers)))
     :bind (:map company-active-map
         ("C-n" . company-select-next)
         ("C-p" . company-select-previous))
         ("<tab>" . company-complete-selection)
     :config
+    (add-to-list 'company-backends 'company-c-headers)
+    
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
-    (add-to-list 'company-backends 'company-c-headers)
-    (add-to-list #'company-c-headers-path-system "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include")
-    (add-to-list #'company-c-headers-path-system "/usr/local/include")
+    
     (global-company-mode t))
 
 (use-package yasnippet
@@ -82,14 +78,16 @@
     :init (global-flycheck-mode))
 
 ;; === C / C++ / Obj-C ================================================
-(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c-mode-hook 'irony-mode)
-(add-hook 'objc-mode-hook 'irony-mode)
-
-(setq backup-directory-alist '(("." . "~/.emacs_saves")))
-(setq create-lockfiles nil)
-(setq auto-save-default nil)
+(use-package lsp-mode
+  :init
+  :hook ((c-mode . lsp)
+         (c++-mode . lsp))
+  :config
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-auto-guess-root t)
+  (setq lsp-enable-folding nil)
+  (setq lsp-idle-delay 0.5)
+)
 
 ;; === Packages =======================================================
 (custom-set-variables
@@ -102,19 +100,17 @@
  '(custom-safe-themes
    '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
  '(package-selected-packages
-   '(use-package flycheck exec-path-from-shell company-irony irony-eldoc evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(arduino-cli-mode company-irony-c-headers company-arduino arduino-mode use-package flycheck exec-path-from-shell company-irony irony-eldoc evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
            (list
-            (expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))
-     (flycheck-clang-include-path . "/usr/local/include/")
-     (flycheck-clang-include-path . "/usr/local/include")
-     (flycheck-clang-include-path . /usr/local/include))))
+            (expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))))
+ '(tab-width 4))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-)
-
+ )
 ;;; .emacs ends here
+
