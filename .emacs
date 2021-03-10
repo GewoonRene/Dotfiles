@@ -4,8 +4,12 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
 (setq backup-directory-alist '(("." . "~/.emacs_saves")))
+(setq backup-directory-alist
+      `(("." . ,(concat user-emacs-directory "backups"))))
+
 (setq create-lockfiles nil)
 (setq auto-save-default nil)
+(setq make-backup-files nil)
 
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
@@ -13,19 +17,51 @@
 (tooltip-mode 0)
 (setq inhibit-startup-message t)
 
-;; === Appearance ===================================================
+;; === Appearance ====================================================
 (load-theme 'gruvbox t)
 (set-face-attribute 'default nil :font "Fira Code" :height 160)
 
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
+(setq ns-use-proxy-icon nil)
+(setq frame-title-format nil)
 
-;; === Terminal =====================================================
+;; === Modeline ======================================================
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+
+(defun my-doom-modeline--font-height ()
+  "Calculate the actual char height of the mode-line."
+  (+ (frame-char-height) 2))
+(advice-add #'doom-modeline--font-height :override #'my-doom-modeline--font-height)
+
+;; === Terminal ======================================================
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
-;; === Editor =======================================================
+;; === Dired =========================================================
+(use-package dired-x
+  :config
+  (progn
+(setq dired-omit-verbose nil)
+(add-hook 'dired-mode-hook #'dired-omit-mode)
+(setq dired-omit-files
+      (concat dired-omit-files "\\|^.DS_STORE$"))))
+
+(defun mydired-sort ()
+  (save-excursion
+    (let (buffer-read-only)
+      (forward-line 2) ;; beyond dir. header 
+      (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
+    (set-buffer-modified-p nil)))
+
+(defadvice dired-readin
+  (after dired-after-updating-hook first () activate)
+  (mydired-sort))
+
+;; === Editor ========================================================
 (global-display-line-numbers-mode)
 (setq display-line-numbers-type 'relative)
 
@@ -58,10 +94,8 @@
         ("<tab>" . company-complete-selection)
     :config
     (add-to-list 'company-backends 'company-c-headers)
-    
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
-    
     (global-company-mode t))
 
 (use-package yasnippet
@@ -73,15 +107,11 @@
 (autopair-global-mode)
 
 ;; === Syntax Checking ================================================
-(use-package flycheck
-    :ensure t
-    :init (global-flycheck-mode))
-
-;; === C / C++ / Obj-C ================================================
 (use-package lsp-mode
   :init
   :hook ((c-mode . lsp)
-         (c++-mode . lsp))
+         (c++-mode . lsp)
+		 (lua-mode . lsp))
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-auto-guess-root t)
@@ -89,7 +119,17 @@
   (setq lsp-idle-delay 0.5)
 )
 
+(use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode))
+
+;; === Lua Language ===================================================
+(use-package lua-mode
+  :ensure t
+  :init)
+
 ;; === Packages =======================================================
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -97,14 +137,15 @@
  ;; If there is more than one, they won't work right.
  '(ansi-color-names-vector
    ["#3c3836" "#fb4934" "#b8bb26" "#fabd2f" "#83a598" "#d3869b" "#8ec07c" "#ebdbb2"])
+ '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(custom-safe-themes
    '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
  '(package-selected-packages
-   '(arduino-cli-mode company-irony-c-headers company-arduino arduino-mode use-package flycheck exec-path-from-shell company-irony irony-eldoc evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(doom-modeline magit lua-mode arduino-cli-mode company-irony-c-headers company-arduino arduino-mode use-package flycheck exec-path-from-shell company-irony irony-eldoc evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
-           (list
-            (expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))))
+		   (list
+			(expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))))
  '(tab-width 4))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -113,4 +154,5 @@
  ;; If there is more than one, they won't work right.
  )
 ;;; .emacs ends here
+
 
