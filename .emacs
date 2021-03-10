@@ -7,9 +7,16 @@
 (setq backup-directory-alist
       `(("." . ,(concat user-emacs-directory "backups"))))
 
+(setq initial-buffer-choice "~/startup.org")
+
 (setq create-lockfiles nil)
 (setq auto-save-default nil)
 (setq make-backup-files nil)
+
+(defun display-startup-echo-area-message ()
+  (message " "))
+
+(setq ring-bell-function 'ignore)
 
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
@@ -140,14 +147,19 @@
  '(custom-safe-themes
    '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
  '(package-selected-packages
-   '(doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(organize-imports-java doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
- '(tab-width 4)))
+   '((eval setq flycheck-clang-include-path
+		   (list
+			(expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))))
+ '(tab-width 4))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(mode-line ((t (:height 0.95))))
+ '(mode-line-inactive ((t (:height 0.95)))))
 ;;; .emacs ends here
+
 
