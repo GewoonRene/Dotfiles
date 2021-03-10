@@ -129,7 +129,6 @@
   :init)
 
 ;; === Packages =======================================================
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -141,12 +140,9 @@
  '(custom-safe-themes
    '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
  '(package-selected-packages
-   '(doom-modeline magit lua-mode arduino-cli-mode company-irony-c-headers company-arduino arduino-mode use-package flycheck exec-path-from-shell company-irony irony-eldoc evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
-   '((eval setq flycheck-clang-include-path
-		   (list
-			(expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))))
- '(tab-width 4))
+ '(tab-width 4)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -154,5 +150,4 @@
  ;; If there is more than one, they won't work right.
  )
 ;;; .emacs ends here
-
 
