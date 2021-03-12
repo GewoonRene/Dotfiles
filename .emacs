@@ -113,12 +113,21 @@
 
 (autopair-global-mode)
 
+;; === Embedded
+(use-package platformio-mode :ensure)
+(use-package arduino-mode :ensure)
+
+(add-to-list 'auto-mode-alist '("\\.ino$" . arduino-mode))
+
 ;; === Syntax Checking ================================================
 (use-package lsp-mode
   :init
   :hook ((c-mode . lsp)
          (c++-mode . lsp)
-		 (lua-mode . lsp))
+         (c++-mode . (platformio-conditionally-enable))
+		 (lua-mode . lsp)
+		 (java-mode . lsp)
+		 (arduino-mode . lsp))
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-auto-guess-root t)
@@ -135,6 +144,12 @@
   :ensure t
   :init)
 
+;; === Java Language ==================================================
+(require 'lsp-java-boot)
+
+(add-hook 'lsp-mode-hook #'lsp-lens-mode)
+(add-hook 'java-mode-hook #'lsp-java-boot-lens-mode)
+
 ;; === Packages =======================================================
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -147,7 +162,7 @@
  '(custom-safe-themes
    '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
  '(package-selected-packages
-   '(organize-imports-java doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(arduino-cli-mode lsp-java organize-imports-java doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
 		   (list
@@ -161,5 +176,6 @@
  '(mode-line ((t (:height 0.95))))
  '(mode-line-inactive ((t (:height 0.95)))))
 ;;; .emacs ends here
+
 
 
