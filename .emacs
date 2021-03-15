@@ -141,14 +141,12 @@
 
 ;; === Lua Language ===================================================
 (use-package lua-mode
-  :ensure t
-  :init)
+    :ensure t
+    :init)
 
 ;; === Java Language ==================================================
-(require 'lsp-java-boot)
-
-(add-hook 'lsp-mode-hook #'lsp-lens-mode)
-(add-hook 'java-mode-hook #'lsp-java-boot-lens-mode)
+(use-package lsp-java
+  :config (add-hook 'java-mode-hook 'lsp))
 
 ;; === Packages =======================================================
 (custom-set-variables
@@ -161,6 +159,7 @@
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(custom-safe-themes
    '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
+ '(org-agenda-files '("~/startup.org"))
  '(package-selected-packages
    '(arduino-cli-mode lsp-java organize-imports-java doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
@@ -176,6 +175,3 @@
  '(mode-line ((t (:height 0.95))))
  '(mode-line-inactive ((t (:height 0.95)))))
 ;;; .emacs ends here
-
-
-
