@@ -2,6 +2,7 @@
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 
 (setq backup-directory-alist '(("." . "~/.emacs_saves")))
 (setq backup-directory-alist
@@ -12,37 +13,28 @@
 (setq create-lockfiles nil)
 (setq auto-save-default nil)
 (setq make-backup-files nil)
+(setq ring-bell-function 'ignore)
+(setq inhibit-startup-message t)
 
 (defun display-startup-echo-area-message ()
   (message " "))
-
-(setq ring-bell-function 'ignore)
 
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
 (tool-bar-mode 0)
 (tooltip-mode 0)
-(setq inhibit-startup-message t)
 
 ;; === Appearance ====================================================
-(load-theme 'gruvbox t)
+(setq custom-safe-themes t)
+(load-theme 'custom-gruvbox-dark-soft t)
 (set-face-attribute 'default nil :font "Fira Code" :height 160)
 
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
+
 (setq ns-use-proxy-icon nil)
 (setq frame-title-format nil)
-
-;; === Modeline ======================================================
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1))
-
-(defun my-doom-modeline--font-height ()
-  "Calculate the actual char height of the mode-line."
-  (+ (frame-char-height) 2))
-(advice-add #'doom-modeline--font-height :override #'my-doom-modeline--font-height)
 
 ;; === Terminal ======================================================
 (when (memq window-system '(mac ns x))
@@ -60,7 +52,7 @@
 (defun mydired-sort ()
   (save-excursion
     (let (buffer-read-only)
-      (forward-line 2) ;; beyond dir. header 
+      (forward-line 2) ;; beyond dir. header
       (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
     (set-buffer-modified-p nil)))
 
@@ -113,12 +105,6 @@
 
 (autopair-global-mode)
 
-;; === Embedded
-(use-package platformio-mode :ensure)
-(use-package arduino-mode :ensure)
-
-(add-to-list 'auto-mode-alist '("\\.ino$" . arduino-mode))
-
 ;; === Syntax Checking ================================================
 (use-package lsp-mode
   :init
@@ -144,24 +130,16 @@
     :ensure t
     :init)
 
-;; === Java Language ==================================================
-(use-package lsp-java
-  :config (add-hook 'java-mode-hook 'lsp))
-
 ;; === Packages =======================================================
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ansi-color-names-vector
-   ["#3c3836" "#fb4934" "#b8bb26" "#fabd2f" "#83a598" "#d3869b" "#8ec07c" "#ebdbb2"])
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
- '(custom-safe-themes
-   '("d14f3df28603e9517eb8fb7518b662d653b25b26e83bd8e129acea042b774298" default))
  '(org-agenda-files '("~/startup.org"))
  '(package-selected-packages
-   '(arduino-cli-mode lsp-java organize-imports-java doom-modeline magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
 		   (list
@@ -172,6 +150,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(mode-line ((t (:height 0.95))))
- '(mode-line-inactive ((t (:height 0.95)))))
+ )
 ;;; .emacs ends here
+
