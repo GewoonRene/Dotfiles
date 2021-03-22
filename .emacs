@@ -1,3 +1,6 @@
+;;; package --- Summary
+;;; Commentary:
+;;; Code:
 (package-initialize)
 
 (require 'package)
@@ -17,6 +20,7 @@
 (setq inhibit-startup-message t)
 
 (defun display-startup-echo-area-message ()
+  "Disable Startup message."
   (message " "))
 
 (menu-bar-mode 0)
@@ -27,18 +31,21 @@
 ;; === Appearance ====================================================
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
-(set-face-attribute 'default nil :font "Fira Code" :height 160)
+(set-face-attribute 'default nil :font "Fira Code" :height 180)
 
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 
+(setq-default frame-title-format '("%b"))
 (setq ns-use-proxy-icon nil)
-(setq frame-title-format nil)
+(setq frame-size-history nil)
 
 ;; === Terminal ======================================================
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
+
+(setq mac-function-modifier 'meta)
 
 ;; === Dired =========================================================
 (use-package dired-x
@@ -50,6 +57,7 @@
       (concat dired-omit-files "\\|^.DS_STORE$"))))
 
 (defun mydired-sort ()
+  "Sort Dired with folders first."
   (save-excursion
     (let (buffer-read-only)
       (forward-line 2) ;; beyond dir. header
@@ -57,19 +65,20 @@
     (set-buffer-modified-p nil)))
 
 (defadvice dired-readin
-  (after dired-after-updating-hook first () activate)
-  (mydired-sort))
+    (after dired-after-updating-hook first () activate)
+    "Start Sorting on startup."
+    (mydired-sort))
 
 ;; === Editor ========================================================
 (global-display-line-numbers-mode)
 (setq display-line-numbers-type 'relative)
 
 ;; === Vi mode =======================================================
-(use-package evil
-    :config
-    (setq mac-function-modifier 'meta)
-    (setq mac-option-modifier nil)
-    (evil-mode 1))
+;;(use-package evil
+;;    :config
+;;    (setq mac-function-modifier 'meta)
+;;    (setq mac-option-modifier nil)
+;;    (evil-mode 1))
 
 ;; === Searching =====================================================
 (use-package ido
@@ -152,4 +161,3 @@
  ;; If there is more than one, they won't work right.
  )
 ;;; .emacs ends here
-
