@@ -73,13 +73,6 @@
 (global-display-line-numbers-mode)
 (setq display-line-numbers-type 'relative)
 
-;; === Vi mode =======================================================
-;;(use-package evil
-;;    :config
-;;    (setq mac-function-modifier 'meta)
-;;    (setq mac-option-modifier nil)
-;;    (evil-mode 1))
-
 ;; === Searching =====================================================
 (use-package ido
     :init
@@ -115,14 +108,13 @@
 (autopair-global-mode)
 
 ;; === Syntax Checking ================================================
+(require 'platformio-mode)
 (use-package lsp-mode
   :init
   :hook ((c-mode . lsp)
          (c++-mode . lsp)
-         (c++-mode . (platformio-conditionally-enable))
-		 (lua-mode . lsp)
-		 (java-mode . lsp)
-		 (arduino-mode . lsp))
+         (C++-mode . platformio-conditionally-enable)
+		 (lua-mode . lsp))
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-auto-guess-root t)
@@ -134,6 +126,9 @@
     :ensure t
     :init (global-flycheck-mode))
 
+;; === C / C++ / Obj-C Languages ======================================
+(setq-default c-basic-offset 4)
+			  
 ;; === Lua Language ===================================================
 (use-package lua-mode
     :ensure t
@@ -148,7 +143,7 @@
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(org-agenda-files '("~/startup.org"))
  '(package-selected-packages
-   '(magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
 		   (list
