@@ -79,33 +79,48 @@
     (setq default-directory "~/")
     (global-set-key (kbd "M-x") 'smex)
     :config
+	(add-to-list 'ido-ignore-files "\\.DS_Store")
     (ido-everywhere 1)
     (ido-mode 1))
 
 ;; === Auto Completing ================================================
+(use-package yasnippet
+    :ensure t
+    :init
+    (setq yas-snippet-dirs '("~/.emacs.snippets/"))
+    :config
+    (yas-global-mode 1))
+
 (require 'company-c-headers)
 (require 'company-capf)
-
 (use-package company
     :init
     (setq company-backends '((company-capf company-c-headers)))
     :bind (:map company-active-map
         ("C-n" . company-select-next)
-        ("C-p" . company-select-previous))
-        ("<tab>" . company-complete-selection)
+        ("C-p" . company-select-previous)
+        ("<tab>" . company-complete-selection))
     :config
     (add-to-list 'company-backends 'company-c-headers)
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
     (global-company-mode t))
 
-(use-package yasnippet
-    :init
-    (setq yas-snippet-dirs '("~/.emacs.snippets/"))
-    :config
-    (yas-global-mode 1))
+(defun mars/company-backend-with-yas (backends)
+      "Add :with company-yasnippet to company BACKENDS."
+      (if (and (listp backends) (memq 'company-yasnippet backends))
+		  backends
+		(append (if (consp backends)
+		  backends
+		  (list backends))
+		'(:with company-yasnippet))))
+
+;; add yasnippet to all backends
+(setq company-backends
+	  (mapcar #'mars/company-backend-with-yas company-backends))
 
 (autopair-global-mode)
+(yas-reload-all)
 
 ;; === Syntax Checking ================================================
 (require 'platformio-mode)
@@ -133,6 +148,80 @@
 (use-package lua-mode
     :ensure t
     :init)
+
+
+;; === Yasnippets & Company fix =======================================
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+    (backward-char 1)
+    (if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (cond
+   ((minibufferp)
+    (minibuffer-complete))
+   (t
+    (indent-for-tab-command)
+    (if (or (not yas/minor-mode)
+        (null (do-yas-expand)))
+    (if (check-expansion)
+        (progn
+          (company-manual-begin)
+          (if (null company-candidates)
+          (progn
+            (company-abort)
+            (indent-for-tab-command)))))))))
+
+(defun tab-complete-or-next-field ()
+  (interactive)
+  (if (or (not yas/minor-mode)
+      (null (do-yas-expand)))
+      (if company-candidates
+      (company-complete-selection)
+    (if (check-expansion)
+      (progn
+        (company-manual-begin)
+        (if (null company-candidates)
+        (progn
+          (company-abort)
+          (yas-next-field))))
+      (yas-next-field)))))
+
+(defun expand-snippet-or-complete-selection ()
+  (interactive)
+  (if (or (not yas/minor-mode)
+      (null (do-yas-expand))
+      (company-abort))
+      (company-complete-selection)))
+
+(defun abort-company-or-yas ()
+  (interactive)
+  (if (null company-candidates)
+      (yas-abort-snippet)
+    (company-abort)))
+
+(global-set-key [tab] 'tab-indent-or-complete)
+(global-set-key (kbd "TAB") 'tab-indent-or-complete)
+(global-set-key [(control return)] 'company-complete-common)
+
+(define-key company-active-map [tab] 'expand-snippet-or-complete-selection)
+(define-key company-active-map (kbd "TAB") 'expand-snippet-or-complete-selection)
+
+(define-key yas-minor-mode-map [tab] nil)
+(define-key yas-minor-mode-map (kbd "TAB") nil)
+
+(define-key yas-keymap [tab] 'tab-complete-or-next-field)
+(define-key yas-keymap (kbd "TAB") 'tab-complete-or-next-field)
+(define-key yas-keymap [(control tab)] 'yas-next-field)
+(define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
 
 ;; === Packages =======================================================
 (custom-set-variables
