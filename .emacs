@@ -36,10 +36,18 @@
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
+(add-to-list 'default-frame-alist '(height . 10))
+(when window-system
+    (set-frame-position (selected-frame) 0 0)
+	(set-frame-size (selected-frame) 168 48))
 
 (setq-default frame-title-format '("%b"))
+
 (setq ns-use-proxy-icon nil)
 (setq frame-size-history nil)
+
+;; === Windows & Buffers =============================================
+
 
 ;; === Terminal ======================================================
 (when (memq window-system '(mac ns x))
@@ -71,7 +79,7 @@
 
 ;; === Editor ========================================================
 (global-display-line-numbers-mode)
-(setq display-line-numbers-type 'relative)
+;;(setq display-line-numbers-type 'relative)
 
 ;; === Searching =====================================================
 (use-package ido
@@ -83,7 +91,15 @@
     (ido-everywhere 1)
     (ido-mode 1))
 
-;; === Auto Completing ================================================
+;; === Org Mode ======================================================
+(use-package org
+  :ensure t
+  :init
+  (setq org-startup-folded nil))
+
+(setq org-link-frame-setup '((file . find-file)))
+
+;; === Auto Completing ===============================================
 (use-package yasnippet
     :ensure t
     :init
@@ -120,7 +136,6 @@
 	  (mapcar #'mars/company-backend-with-yas company-backends))
 
 (autopair-global-mode)
-(yas-reload-all)
 
 ;; === Syntax Checking ================================================
 (require 'platformio-mode)
@@ -128,7 +143,8 @@
   :init
   :hook ((c-mode . lsp)
          (c++-mode . lsp)
-         (C++-mode . platformio-conditionally-enable)
+         (c++-mode . platformio-conditionally-enable)
+		 (java-mode . lsp)
 		 (lua-mode . lsp))
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
@@ -143,12 +159,17 @@
 
 ;; === C / C++ / Obj-C Languages ======================================
 (setq-default c-basic-offset 4)
-			  
+
+;; === Java Language =================================================
+(use-package lsp-java
+  :ensure t
+  :after lsp
+  :hook (add-hook 'java-mode-hook #'lsp))
+
 ;; === Lua Language ===================================================
 (use-package lua-mode
     :ensure t
     :init)
-
 
 ;; === Yasnippets & Company fix =======================================
 (defun check-expansion ()
@@ -232,7 +253,7 @@
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(org-agenda-files '("~/startup.org"))
  '(package-selected-packages
-   '(ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company lsp-mode smex))
+   '(lsp-javacomp ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
 		   (list
