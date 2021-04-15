@@ -37,6 +37,7 @@
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 (add-to-list 'default-frame-alist '(height . 10))
+
 (when window-system
     (set-frame-position (selected-frame) 0 0)
 	(set-frame-size (selected-frame) 168 48))
