@@ -31,13 +31,12 @@
 ;; === Appearance ====================================================
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
-(set-face-attribute 'default nil :font "Fira Code" :height 180)
+(set-face-attribute 'default nil :font "Fira Code" :height 160)
 
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 (add-to-list 'default-frame-alist '(height . 10))
-
 (when window-system
     (set-frame-position (selected-frame) 0 0)
 	(set-frame-size (selected-frame) 168 48))
@@ -47,8 +46,14 @@
 (setq ns-use-proxy-icon nil)
 (setq frame-size-history nil)
 
-;; === Windows & Buffers =============================================
+(global-display-line-numbers-mode)
 
+;; === Windows & Buffers =============================================
+(windmove-default-keybindings)
+
+;; === Mini Buffer
+(add-hook 'minibuffer-setup-hook
+		  (lambda () (setq truncate-lines t)))
 
 ;; === Terminal ======================================================
 (when (memq window-system '(mac ns x))
@@ -56,33 +61,16 @@
 
 (setq mac-function-modifier 'meta)
 
-;; === Dired =========================================================
+;; === File management / Searching ===================================
 (use-package dired-x
   :config
-  (progn
-(setq dired-omit-verbose nil)
-(add-hook 'dired-mode-hook #'dired-omit-mode)
-(setq dired-omit-files
-      (concat dired-omit-files "\\|^.DS_STORE$"))))
+  (add-hook 'dired-mode-hook #'dired-omit-mode)
+  (setq dired-omit-files
+      (concat dired-omit-files "\\|^.DS_STORE$\\|^.projectile$"))
+  (setq dired-listing-switches "-laGh1v --group-directories-first")
+  ;; Options https://oremacs.com/2015/01/13/dired-options/
+  (setq dired-recursive-copies 'always))
 
-(defun mydired-sort ()
-  "Sort Dired with folders first."
-  (save-excursion
-    (let (buffer-read-only)
-      (forward-line 2) ;; beyond dir. header
-      (sort-regexp-fields t "^.*$" "[ ]*." (point) (point-max)))
-    (set-buffer-modified-p nil)))
-
-(defadvice dired-readin
-    (after dired-after-updating-hook first () activate)
-    "Start Sorting on startup."
-    (mydired-sort))
-
-;; === Editor ========================================================
-(global-display-line-numbers-mode)
-;;(setq display-line-numbers-type 'relative)
-
-;; === Searching =====================================================
 (use-package ido
     :init
     (setq default-directory "~/")
@@ -91,14 +79,6 @@
 	(add-to-list 'ido-ignore-files "\\.DS_Store")
     (ido-everywhere 1)
     (ido-mode 1))
-
-;; === Org Mode ======================================================
-(use-package org
-  :ensure t
-  :init
-  (setq org-startup-folded nil))
-
-(setq org-link-frame-setup '((file . find-file)))
 
 ;; === Auto Completing ===============================================
 (use-package yasnippet
@@ -156,12 +136,15 @@
 
 (use-package flycheck
     :ensure t
-    :init (global-flycheck-mode))
+    :init (global-flycheck-mode)
+	:config
+	(setq flycheck-check-syntax-automatically '(save idle-change mode-enabled))
+	(setq flycheck-idle-change-delay 4))
 
 ;; === C / C++ / Obj-C Languages ======================================
 (setq-default c-basic-offset 4)
 
-;; === Java Language =================================================
+;; === Java Language ==================================================
 (use-package lsp-java
   :ensure t
   :after lsp
@@ -171,6 +154,14 @@
 (use-package lua-mode
     :ensure t
     :init)
+
+;; === Org Mode =======================================================
+(use-package org
+  :ensure t
+  :init
+  (setq org-startup-folded nil)
+  (setq org-link-frame-setup '((file . find-file))))
+
 
 ;; === Yasnippets & Company fix =======================================
 (defun check-expansion ()
@@ -244,6 +235,20 @@
 (define-key yas-keymap (kbd "TAB") 'tab-complete-or-next-field)
 (define-key yas-keymap [(control tab)] 'yas-next-field)
 (define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
+
+;; === Compilation ====================================================
+(defun my-compilation-hook ()
+  "Compile window always at the bottom."
+  (when (not (get-buffer-window "*compilation*"))
+    (save-selected-window
+      (save-excursion
+        (let* ((w (split-window-vertically))
+               (h (window-height w)))
+          (select-window w)
+          (switch-to-buffer "*compilation*")
+          (shrink-window (- h 15)))))))
+
+(add-hook 'compilation-mode-hook 'my-compilation-hook)
 
 ;; === Packages =======================================================
 (custom-set-variables
