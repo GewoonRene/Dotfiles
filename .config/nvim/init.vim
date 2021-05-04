@@ -22,6 +22,8 @@ call plug#begin("~/.vim/plugged")
     Plug 'prettier/vim-prettier', {
         \ 'do': 'yarn install',
         \ 'for': ['javascript', 'typescript', 'css', 'less', 'json' ] }
+    " Arduino
+    Plug 'stevearc/vim-arduino'
     " Themes
     Plug 'drewtempelmeyer/palenight.vim'
     Plug 'gruvbox-community/gruvbox'
@@ -55,20 +57,15 @@ set splitright
 " == Theme & Colors ==
 set termguicolors
 set background=dark
+let g:gruvbox_contrast_dark="soft"
 colorscheme gruvbox
 let g:airline_theme="gruvbox"
-let g:gruvbox_contrast_dark = 'hard'
 
 " == Fold ==
 set foldmethod=syntax
 set foldnestmax=10
 set nofoldenable
 set foldlevel=2
-
-if exists('+termguicolors')
-    let &t_8f = "\<Esc>[38;2;%lu;%lu%lum"
-    let &t_8b = "\<Esc>[48;2;%lu;%lu%lum"
-endif
 
 let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
 let $FZF_DEFAULT_OPTS='--reverse'
@@ -182,3 +179,17 @@ function! s:check_back_space() abort
 endfunction
 
 let g:coc_snippet_next = '<tab>'
+
+" Arduino in statusline
+let g:arduino_cmd = '/Applications/Arduino.app/Contents/MacOS/Arduino'
+let g:arduino_dir = '/Applications/Arduino.app/Contents/MacOS/'
+
+function! MyStatusLine()
+  let port = arduino#GetPort()
+  let line = '%f [' . g:arduino_board . '] [' . g:arduino_programmer . ']'
+  if !empty(port)
+    let line = line . ' (' . port . ':' . g:arduino_serial_baud . ')'
+  endif
+  return line
+endfunction
+autocmd BufNewFile,BufRead *.ino let g:airline_section_x='%{MyStatusLine()}'
