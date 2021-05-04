@@ -28,7 +28,7 @@
 (tool-bar-mode 0)
 (tooltip-mode 0)
 
-;; === Appearance ====================================================
+;; === Appearance ====================================================================
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
 (set-face-attribute 'default nil :font "Fira Code" :height 160)
@@ -66,7 +66,7 @@
   :config
   (add-hook 'dired-mode-hook #'dired-omit-mode)
   (setq dired-omit-files
-      (concat dired-omit-files "\\|^.DS_STORE$\\|^.projectile$"))
+      (concat dired-omit-files "\\|^.DS_STORE$\\|^.projectile$\\|^.ccls-cache$\\|^.localized$"))
   (setq dired-listing-switches "-laGh1v --group-directories-first")
   ;; Options https://oremacs.com/2015/01/13/dired-options/
   (setq dired-recursive-copies 'always))
@@ -78,7 +78,8 @@
     :config
 	(add-to-list 'ido-ignore-files "\\.DS_Store")
     (ido-everywhere 1)
-    (ido-mode 1))
+    (ido-mode 1)
+	(setq ido-file-extensions-order '(".emacs")))
 
 ;; === Auto Completing ===============================================
 (use-package yasnippet
@@ -131,8 +132,7 @@
   (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-auto-guess-root t)
   (setq lsp-enable-folding nil)
-  (setq lsp-idle-delay 0.5)
-)
+  (setq lsp-idle-delay 0.5))
 
 (use-package flycheck
     :ensure t
@@ -257,7 +257,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
- '(org-agenda-files '("~/startup.org"))
+ '(display-line-numbers-type 'relative)
+ '(org-agenda-files '("~/docs/finance.org" "~/startup.org"))
  '(package-selected-packages
    '(lsp-javacomp ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
  '(safe-local-variable-values
