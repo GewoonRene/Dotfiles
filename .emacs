@@ -28,6 +28,11 @@
 (tool-bar-mode 0)
 (tooltip-mode 0)
 
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+
+(setq mac-function-modifier 'meta)
+
 ;; === Appearance ====================================================================
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
@@ -46,8 +51,6 @@
 (setq ns-use-proxy-icon nil)
 (setq frame-size-history nil)
 
-(global-display-line-numbers-mode)
-
 ;; === Windows & Buffers =============================================
 (windmove-default-keybindings)
 
@@ -55,11 +58,7 @@
 (add-hook 'minibuffer-setup-hook
 		  (lambda () (setq truncate-lines t)))
 
-;; === Terminal ======================================================
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
 
-(setq mac-function-modifier 'meta)
 
 ;; === File management / Searching ===================================
 (use-package dired-x
@@ -80,6 +79,12 @@
     (ido-everywhere 1)
     (ido-mode 1)
 	(setq ido-file-extensions-order '(".emacs")))
+
+(use-package recentf
+    :config
+    (recentf-mode 1)
+    (setq recentf-max-menu-items 25)
+    (global-set-key "\C-x\ \C-r" 'recentf-open-files))
 
 ;; === Auto Completing ===============================================
 (use-package yasnippet
@@ -155,14 +160,20 @@
     :ensure t
     :init)
 
-;; === Org Mode =======================================================
+;; === Writing & Documentation  ======================================
+(global-display-line-numbers-mode)
+
+(use-package olivetti)
+
 (use-package org
-  :ensure t
-  :init
-  (setq org-startup-folded nil)
-  (setq org-link-frame-setup '((file . find-file))))
-
-
+    :ensure t
+    :init
+    (setq org-startup-folded nil)
+    (setq org-link-frame-setup '((file . find-file)))
+    :config
+	(add-hook 'org-mode-hook 'olivetti-mode 1)
+	(global-display-line-numbers-mode 0))
+	
 ;; === Yasnippets & Company fix =======================================
 (defun check-expansion ()
   (save-excursion
@@ -260,7 +271,7 @@
  '(display-line-numbers-type 'relative)
  '(org-agenda-files '("~/docs/finance.org" "~/startup.org"))
  '(package-selected-packages
-   '(lsp-javacomp ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
+   '(centered-window olivetti writeroom-mode lsp-javacomp ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
 		   (list
