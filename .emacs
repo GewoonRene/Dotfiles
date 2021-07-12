@@ -28,9 +28,6 @@
 (tool-bar-mode 0)
 (tooltip-mode 0)
 
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
-
 (setq mac-function-modifier 'meta)
 
 ;; === Appearance ====================================================================
@@ -53,22 +50,35 @@
 
 ;; === Windows & Buffers =============================================
 (windmove-default-keybindings)
+(mood-line-mode)
 
 ;; === Mini Buffer
 (add-hook 'minibuffer-setup-hook
 		  (lambda () (setq truncate-lines t)))
 
-
+;; === Terminal  =====================================================
+(use-package exec-path-from-shell
+    :ensure t
+    :custom
+    (shell-file-name "/bin/zsh")
+    :init
+    (if (string-equal system-type "darwin")
+        (exec-path-from-shell-initialize)))
 
 ;; === File management / Searching ===================================
 (use-package dired-x
-  :config
-  (add-hook 'dired-mode-hook #'dired-omit-mode)
-  (setq dired-omit-files
-      (concat dired-omit-files "\\|^.DS_STORE$\\|^.projectile$\\|^.ccls-cache$\\|^.localized$"))
-  (setq dired-listing-switches "-laGh1v --group-directories-first")
-  ;; Options https://oremacs.com/2015/01/13/dired-options/
-  (setq dired-recursive-copies 'always))
+    :config
+    (add-hook 'dired-mode-hook #'dired-omit-mode)
+    (setq dired-omit-files
+        (rx (or (seq bol (? ".") "#")
+            (seq bol "." eol)
+			(seq bol ".DS_STORE" eol)
+			(seq bol ".projectile" eol)
+			(seq bol ".ccls-cache" eol)
+		    (seq bol ".localized" eol))))
+    (setq dired-listing-switches "-laGh1v --group-directories-first")
+    ;; Options https://oremacs.com/2015/01/13/dired-options/
+    (setq dired-recursive-copies 'always))
 
 (use-package ido
     :init
@@ -79,12 +89,6 @@
     (ido-everywhere 1)
     (ido-mode 1)
 	(setq ido-file-extensions-order '(".emacs")))
-
-(use-package recentf
-    :config
-    (recentf-mode 1)
-    (setq recentf-max-menu-items 25)
-    (global-set-key "\C-x\ \C-r" 'recentf-open-files))
 
 ;; === Auto Completing ===============================================
 (use-package yasnippet
@@ -125,14 +129,22 @@
 (autopair-global-mode)
 
 ;; === Syntax Checking ================================================
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+
 (require 'platformio-mode)
 (use-package lsp-mode
   :init
   :hook ((c-mode . lsp)
          (c++-mode . lsp)
          (c++-mode . platformio-conditionally-enable)
-		 (java-mode . lsp)
-		 (lua-mode . lsp))
+     	 (lua-mode . lsp)
+
+         (java-mode . lsp)
+
+		 (html-mode . lsp)
+		 (css-mode . lsp)
+		 (typescript-mode . lsp))
+  
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-auto-guess-root t)
@@ -155,25 +167,60 @@
   :after lsp
   :hook (add-hook 'java-mode-hook #'lsp))
 
+;; === Web Development ================================================
+
+;; Typescript & TSX
+(use-package typescript-mode
+  :ensure t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode)))
+
+
+(use-package tide
+  :ensure t
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup))
+  :config
+  (setq tide-format-options '(:indentSize 4 :tabSize 4)))
+
 ;; === Lua Language ===================================================
 (use-package lua-mode
     :ensure t
     :init)
 
-;; === Writing & Documentation  ======================================
-(global-display-line-numbers-mode)
-
-(use-package olivetti)
+;; === Writing & Documentation  =======================================
+(use-package olivetti
+  :ensure t
+  :hook
+  (add-hook 'org-mode-hook 'olivetti-mode 1))
 
 (use-package org
     :ensure t
     :init
+    (setq org-hide-emphasis-markers t)
     (setq org-startup-folded nil)
     (setq org-link-frame-setup '((file . find-file)))
     :config
-	(add-hook 'org-mode-hook 'olivetti-mode 1)
-	(global-display-line-numbers-mode 0))
-	
+    ;; Mathematics equations
+    (setq org-startup-with-latex-preview t)
+    (setq org-preview-latex-default-process 'dvisvgm)
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5)))
+
+;; LaTeX
+(latex-preview-pane-enable)
+
+;; Minor writing modes
+(delete-selection-mode)
+
+;; === Project Management =============================================
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map)))
+
 ;; === Yasnippets & Company fix =======================================
 (defun check-expansion ()
   (save-excursion
@@ -268,10 +315,10 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
- '(display-line-numbers-type 'relative)
  '(org-agenda-files '("~/docs/finance.org" "~/startup.org"))
  '(package-selected-packages
-   '(centered-window olivetti writeroom-mode lsp-javacomp ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
+   '(lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line pdf-tools centered-window olivetti writeroom-mode ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
+ '(pdf-tools-handle-upgrades nil)
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
 		   (list
