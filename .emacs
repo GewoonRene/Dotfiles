@@ -18,6 +18,7 @@
 (setq make-backup-files nil)
 (setq ring-bell-function 'ignore)
 (setq inhibit-startup-message t)
+(setq use-dialog-box nil)
 
 (defun display-startup-echo-area-message ()
   "Disable Startup message."
