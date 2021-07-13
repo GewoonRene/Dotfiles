@@ -11,7 +11,7 @@
 (setq backup-directory-alist
       `(("." . ,(concat user-emacs-directory "backups"))))
 
-(setq initial-buffer-choice "~/startup.org")
+(setq initial-scratch-message nil)
 
 (setq create-lockfiles nil)
 (setq auto-save-default nil)
@@ -39,11 +39,8 @@
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 (add-to-list 'default-frame-alist '(height . 10))
-(when window-system
-    (set-frame-position (selected-frame) 0 0)
-	(set-frame-size (selected-frame) 168 48))
 
-(setq-default frame-title-format '("%b"))
+(setq frame-title-format "\n")
 
 (setq ns-use-proxy-icon nil)
 (setq frame-size-history nil)
@@ -192,7 +189,7 @@
 ;; === Writing & Documentation  =======================================
 (use-package olivetti
   :ensure t
-  :hook
+  :init
   (add-hook 'org-mode-hook 'olivetti-mode 1))
 
 (use-package org
@@ -203,8 +200,9 @@
     (setq org-link-frame-setup '((file . find-file)))
     :config
     ;; Mathematics equations
-    (setq org-startup-with-latex-preview t)
-    (setq org-preview-latex-default-process 'dvisvgm)
+	;;(setq org-preview-latex-image-directory "~/.emacs.d/.local/cache/org-latex")
+    ;;(setq org-latex-create-formula-image-program 'dvisvgm)
+    ;;(setq org-preview-latex-default-process 'dvisvgm)
     (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5)))
 
 ;; LaTeX
