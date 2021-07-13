@@ -12,6 +12,7 @@
       `(("." . ,(concat user-emacs-directory "backups"))))
 
 (setq initial-scratch-message nil)
+(setq initial-major-mode 'org-mode)
 
 (setq create-lockfiles nil)
 (setq auto-save-default nil)
@@ -177,7 +178,6 @@
   (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode)))
 
-
 (use-package tide
   :ensure t
   :after (typescript-mode company flycheck)
@@ -194,7 +194,9 @@
 (use-package olivetti
   :ensure t
   :init
-  (add-hook 'org-mode-hook 'olivetti-mode 1))
+  (add-hook 'org-mode-hook 'olivetti-mode 1)
+  :custom
+  (olivetti-body-width 170))
 
 (use-package org
     :ensure t
