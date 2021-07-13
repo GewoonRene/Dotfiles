@@ -23,7 +23,10 @@
   "Disable Startup message."
   (message " "))
 
-(menu-bar-mode 0)
+(if (string-equal system-type "darwin")
+    (menu-bar-mode 1)
+  (menu-bar-mode 0))
+
 (scroll-bar-mode 0)
 (tool-bar-mode 0)
 (tooltip-mode 0)
