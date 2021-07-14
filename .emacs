@@ -211,6 +211,13 @@
     ;;(setq org-preview-latex-default-process 'dvisvgm)
     (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5)))
 
+;; Display fill column indicator
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'org-mode-hook 'display-fill-column-indicator-mode)
+(set-face-background 'fill-column-indicator "#3c3836")
+(setq-default display-fill-column-indicator-column 100)
+(setq-default display-fill-column-indicator-character '32)
+
 ;; LaTeX
 (latex-preview-pane-enable)
 
