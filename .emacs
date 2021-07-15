@@ -35,7 +35,7 @@
 
 (setq mac-function-modifier 'meta)
 
-;; === Appearance ====================================================================
+;; === Appearance ====================================================
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
 (set-face-attribute 'default nil :font "Fira Code" :height 160)
@@ -130,7 +130,7 @@
 
 (autopair-global-mode)
 
-;; === Syntax Checking ================================================
+;; === Syntax Checking ============================================
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
 (require 'platformio-mode)
@@ -189,7 +189,6 @@
 (use-package lua-mode
     :ensure t
     :init)
-
 ;; === Writing & Documentation  =======================================
 (use-package olivetti
   :ensure t
@@ -218,6 +217,9 @@
 (setq-default display-fill-column-indicator-column 100)
 (setq-default display-fill-column-indicator-character '32)
 
+;; Auto wrap
+(visual-line-mode t)
+
 ;; LaTeX
 (latex-preview-pane-enable)
 
@@ -234,6 +236,7 @@
 
 ;; === Yasnippets & Company fix =======================================
 (defun check-expansion ()
+  "Check."
   (save-excursion
     (if (looking-at "\\_>") t
       (backward-char 1)
@@ -242,17 +245,18 @@
     (if (looking-at "->") t nil)))))
 
 (defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-    (yas/expand)))
+  (let ((yas-fallback-behavior 'return-nil))
+    (yas-expand)))
 
 (defun tab-indent-or-complete ()
+  "Tab to indent."
   (interactive)
   (cond
    ((minibufferp)
     (minibuffer-complete))
    (t
     (indent-for-tab-command)
-    (if (or (not yas/minor-mode)
+    (if (or (not yas-minor-mode)
         (null (do-yas-expand)))
     (if (check-expansion)
         (progn
@@ -263,8 +267,9 @@
             (indent-for-tab-command)))))))))
 
 (defun tab-complete-or-next-field ()
+  "Tab to complete."
   (interactive)
-  (if (or (not yas/minor-mode)
+  (if (or (not yas-minor-mode)
       (null (do-yas-expand)))
       (if company-candidates
       (company-complete-selection)
@@ -278,13 +283,15 @@
       (yas-next-field)))))
 
 (defun expand-snippet-or-complete-selection ()
+  "Expand the snippet or complete the selection."
   (interactive)
-  (if (or (not yas/minor-mode)
+  (if (or (not yas-minor-mode)
       (null (do-yas-expand))
       (company-abort))
       (company-complete-selection)))
 
 (defun abort-company-or-yas ()
+  "Abort."
   (interactive)
   (if (null company-candidates)
       (yas-abort-snippet)
@@ -317,6 +324,10 @@
           (switch-to-buffer "*compilation*")
           (shrink-window (- h 15)))))))
 
+;; Remove autowrap in compile mode
+(add-hook 'compilation-mode-hook
+          (lambda () (visual-line-mode nil)))
+
 (add-hook 'compilation-mode-hook 'my-compilation-hook)
 
 ;; === Packages =======================================================
@@ -326,9 +337,11 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
- '(org-agenda-files '("~/docs/finance.org" "~/startup.org"))
  '(package-selected-packages
-   '(lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line pdf-tools centered-window olivetti writeroom-mode ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
+   '(lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line pdf-tools
+				  centered-window olivetti writeroom-mode ccls platformio-mode magit lua-mode
+				  use-package flycheck exec-path-from-shell evil company-c-headers autopair
+				  yasnippet company smex))
  '(pdf-tools-handle-upgrades nil)
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
