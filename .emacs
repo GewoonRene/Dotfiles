@@ -67,6 +67,8 @@
     (if (string-equal system-type "darwin")
         (exec-path-from-shell-initialize)))
 
+(setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
+
 ;; === File management / Searching ===================================
 (use-package dired-x
     :config
@@ -104,7 +106,7 @@
 (require 'company-capf)
 (use-package company
     :init
-    (setq company-backends '((company-capf company-c-headers)))
+    (setq company-backends '((company-capf company-c-headers company-glsl)))
     :bind (:map company-active-map
         ("C-n" . company-select-next)
         ("C-p" . company-select-previous)
@@ -130,6 +132,20 @@
 
 (autopair-global-mode)
 
+;; === Web Development ================================================
+(use-package web-mode
+  :ensure t
+  :mode (("\\.js\\'" . web-mode)
+		 ("\\.ts\\'" . web-mode)
+		 ("\\.jsx\\'" . web-mode)
+		 ("\\.tsx\\'" . web-mode)
+		 ("\\.html\\'" . web-mode))
+  :commands web-mode)
+
+;; === Json
+(use-package json-mode
+    :ensure t)
+
 ;; === Syntax Checking ============================================
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
@@ -143,9 +159,8 @@
 
          (java-mode . lsp)
 
-		 (html-mode . lsp)
-		 (css-mode . lsp)
-		 (typescript-mode . lsp))
+		 (web-mode . lsp)
+		 (json-mode . lsp))
   
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
@@ -163,32 +178,21 @@
 ;; === C / C++ / Obj-C Languages ======================================
 (setq-default c-basic-offset 4)
 
+;; === GLSL Shading Lanuage ===========================================
+(use-package glsl-mode
+    :ensure t
+    :mode (("\\.glsl\\'" . glsl-mode)))
+
 ;; === Java Language ==================================================
 (use-package lsp-java
   :ensure t
   :after lsp
   :hook (add-hook 'java-mode-hook #'lsp))
 
-;; === Web Development ================================================
-
-;; Typescript & TSX
-(use-package typescript-mode
-  :ensure t
-  :init
-  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode)))
-
-(use-package tide
-  :ensure t
-  :after (typescript-mode company flycheck)
-  :hook ((typescript-mode . tide-setup))
-  :config
-  (setq tide-format-options '(:indentSize 4 :tabSize 4)))
-
 ;; === Lua Language ===================================================
 (use-package lua-mode
-    :ensure t
-    :init)
+    :ensure t)
+
 ;; === Writing & Documentation  =======================================
 (use-package olivetti
   :ensure t
@@ -196,6 +200,12 @@
   (add-hook 'org-mode-hook 'olivetti-mode 1)
   :custom
   (olivetti-body-width 170))
+
+(use-package hungry-delete
+  :ensure t
+  :config
+  (setq hungry-delete-join-reluctantly t)
+  (global-hungry-delete-mode 1))
 
 (use-package org
     :ensure t
@@ -208,7 +218,7 @@
 	;;(setq org-preview-latex-image-directory "~/.emacs.d/.local/cache/org-latex")
     ;;(setq org-latex-create-formula-image-program 'dvisvgm)
     ;;(setq org-preview-latex-default-process 'dvisvgm)
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5)))
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.7)))
 
 ;; Display fill column indicator
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
@@ -328,6 +338,17 @@
 (add-hook 'compilation-mode-hook
           (lambda () (visual-line-mode nil)))
 
+;; Scroll on output
+(setq compilation-scroll-output t)
+
+;; Enable Ansii colors
+(use-package ansi-color
+  :config
+  (defun my-colorize-compilation-buffer ()
+    (when (eq major-mode 'compilation-mode)
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  :hook (compilation-filter . my-colorize-compilation-buffer))
+
 (add-hook 'compilation-mode-hook 'my-compilation-hook)
 
 ;; === Packages =======================================================
@@ -338,10 +359,7 @@
  ;; If there is more than one, they won't work right.
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(package-selected-packages
-   '(lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line pdf-tools
-				  centered-window olivetti writeroom-mode ccls platformio-mode magit lua-mode
-				  use-package flycheck exec-path-from-shell evil company-c-headers autopair
-				  yasnippet company smex))
+   '(company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line pdf-tools centered-window olivetti writeroom-mode ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
  '(pdf-tools-handle-upgrades nil)
  '(safe-local-variable-values
    '((eval setq flycheck-clang-include-path
