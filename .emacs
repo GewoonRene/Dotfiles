@@ -21,6 +21,10 @@
 (setq inhibit-startup-message t)
 (setq use-dialog-box nil)
 
+(when (memq window-system '(mac ns))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)))
+
 (defun display-startup-echo-area-message ()
   "Disable Startup message."
   (message " "))
@@ -33,7 +37,7 @@
 (tool-bar-mode 0)
 (tooltip-mode 0)
 
-(setq mac-function-modifier 'meta)
+(setq select-enable-clipboard t)(setq select-enable-clipboard t)
 
 ;; === Appearance ====================================================
 (setq custom-safe-themes t)
@@ -58,6 +62,17 @@
 (add-hook 'minibuffer-setup-hook
 		  (lambda () (setq truncate-lines t)))
 
+;; === Key Binding ===================================================
+(setq mac-function-modifier 'meta)
+(setq mac-command-modifier 'super)
+(setq mac-pass-command-to-system t)
+
+(when (symbolp 'mac-control-modifier)
+  (global-set-key (kbd "s-z") 'undo)
+  (global-set-key (kbd "s-x") 'kill-region)
+  (global-set-key (kbd "s-c") 'kill-ring-save)
+  (global-set-key (kbd "s-v") 'yank))
+
 ;; === Terminal  =====================================================
 (use-package exec-path-from-shell
     :ensure t
@@ -66,8 +81,6 @@
     :init
     (if (string-equal system-type "darwin")
         (exec-path-from-shell-initialize)))
-
-(setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
 
 ;; === File management / Searching ===================================
 (use-package dired-x
@@ -147,7 +160,8 @@
     :ensure t)
 
 ;; === Syntax Checking ============================================
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
+(add-hook 'elisp-mode-hook 'display-line-numbers-mode +1)
 
 (require 'platformio-mode)
 (use-package lsp-mode
@@ -218,11 +232,23 @@
 	;;(setq org-preview-latex-image-directory "~/.emacs.d/.local/cache/org-latex")
     ;;(setq org-latex-create-formula-image-program 'dvisvgm)
     ;;(setq org-preview-latex-default-process 'dvisvgm)
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.7)))
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.0)))
+
+(use-package pdf-tools
+  :defer t
+  :commands (pdf-view-mode pdf-tools-install)
+  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :config
+  (pdf-tools-install)
+  (define-pdf-cache-function pagelabels)
+  :hook ((pdf-view-mode-hook . (lambda() (display-line-numbers-mode -1)))
+		 (pdf-view-mode-hook . pdf-tools-enable-minor-modes)))
 
 ;; Display fill column indicator
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'org-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'org-mode-hook 'visual-line-mode)
 (set-face-background 'fill-column-indicator "#3c3836")
 (setq-default display-fill-column-indicator-column 100)
 (setq-default display-fill-column-indicator-character '32)
