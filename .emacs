@@ -1,33 +1,51 @@
-;;; package --- Summary
+;;; package --- Summary: René Huiberts | Emacs Configuration.
 ;;; Commentary:
 ;;; Code:
+
+;;; === My Emacs Configuration File =========================================
+;; Emacs Package Manager
 (package-initialize)
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 
+;; Backup files
 (setq backup-directory-alist '(("." . "~/.emacs_saves")))
 (setq backup-directory-alist
       `(("." . ,(concat user-emacs-directory "backups"))))
 
-(setq initial-scratch-message nil)
-(setq initial-major-mode 'org-mode)
-
 (setq create-lockfiles nil)
 (setq auto-save-default nil)
 (setq make-backup-files nil)
-(setq ring-bell-function 'ignore)
+
+;;; === Emacs Startup =======================================================
+;; Message in scratch buffer
+(defun display-startup-echo-area-message ()
+  "Disable Startup message."
+    (message " "))
+
+;; Initialization
+(setq initial-scratch-message nil)
+(setq initial-major-mode 'org-mode)
 (setq inhibit-startup-message t)
 (setq use-dialog-box nil)
 
+;;; === Appearance ==========================================================
+;; Window Appearance
 (when (memq window-system '(mac ns))
   (add-to-list 'default-frame-alist '(ns-appearance . dark))
-  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)))
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)))
 
-(defun display-startup-echo-area-message ()
-  "Disable Startup message."
-  (message " "))
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+(add-to-list 'default-frame-alist '(internal-border-width . 5))
+(add-to-list 'default-frame-alist '(height . 10))
+
+(setq frame-title-format "\n")
+(setq ns-use-proxy-icon nil)
+(setq frame-size-history nil)
+(setq ring-bell-function 'ignore)
 
 (if (string-equal system-type "darwin")
     (menu-bar-mode 1)
@@ -37,52 +55,29 @@
 (tool-bar-mode 0)
 (tooltip-mode 0)
 
-(setq select-enable-clipboard t)(setq select-enable-clipboard t)
+;; Editor Appearance
+(set-face-attribute 'default nil :font "Fira Code" :height 180)
 
-;; === Appearance ====================================================
+;; Theme
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
-(set-face-attribute 'default nil :font "Fira Code" :height 160)
 
-(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(ns-appearance . dark))
-(add-to-list 'default-frame-alist '(internal-border-width . 5))
-(add-to-list 'default-frame-alist '(height . 10))
-
-(setq frame-title-format "\n")
-
-(setq ns-use-proxy-icon nil)
-(setq frame-size-history nil)
-
-;; === Windows & Buffers =============================================
-(windmove-default-keybindings)
+;; Modeline
 (mood-line-mode)
 
-;; === Mini Buffer
-(add-hook 'minibuffer-setup-hook
-		  (lambda () (setq truncate-lines t)))
 
-;; === Key Binding ===================================================
-(setq mac-function-modifier 'meta)
-(setq mac-command-modifier 'super)
-(setq mac-pass-command-to-system t)
 
-(when (symbolp 'mac-control-modifier)
-  (global-set-key (kbd "s-z") 'undo)
-  (global-set-key (kbd "s-x") 'kill-region)
-  (global-set-key (kbd "s-c") 'kill-ring-save)
-  (global-set-key (kbd "s-v") 'yank))
+;;; === Editor Configurations ===============================================
+;; Display line numbers
+(add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
+(add-hook 'elisp-mode-hook 'display-line-numbers-mode +1)
+(add-hook 'latex-mode-hook 'display-line-numbers-mode +1)
+(setq display-line-numbers-type 'relative)
 
-;; === Terminal  =====================================================
-(use-package exec-path-from-shell
-    :ensure t
-    :custom
-    (shell-file-name "/bin/zsh")
-    :init
-    (if (string-equal system-type "darwin")
-        (exec-path-from-shell-initialize)))
+;; Autopair brackets
+(autopair-global-mode)
 
-;; === File management / Searching ===================================
+;; === File management / Searching ==========================================
 (use-package dired-x
     :config
     (add-hook 'dired-mode-hook #'dired-omit-mode)
@@ -92,11 +87,13 @@
 			(seq bol ".DS_STORE" eol)
 			(seq bol ".projectile" eol)
 			(seq bol ".ccls-cache" eol)
+			(seq bol ".log/" eol)
 		    (seq bol ".localized" eol))))
     (setq dired-listing-switches "-laGh1v --group-directories-first")
     ;; Options https://oremacs.com/2015/01/13/dired-options/
     (setq dired-recursive-copies 'always))
 
+;; Searching using the C- and M- commands
 (use-package ido
     :init
     (setq default-directory "~/")
@@ -107,14 +104,59 @@
     (ido-mode 1)
 	(setq ido-file-extensions-order '(".emacs")))
 
-;; === Auto Completing ===============================================
-(use-package yasnippet
+;; Bookmarks
+(global-set-key (kbd "C-x C-g")
+    (lambda ()
+        (interactive)
+        (bookmark-jump
+            (ido-completing-read "Jump to bookmark: "
+                (bookmark-all-names)))))
+
+;;; === Project Management ==================================================
+(use-package projectile
     :ensure t
     :init
-    (setq yas-snippet-dirs '("~/.emacs.snippets/"))
+    (projectile-mode +1)
+    :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map))
     :config
-    (yas-global-mode 1))
+    (setq projectile-track-known-projects-automatically nil))
 
+;;; === General Language Configurations =====================================
+;; Indentations, Whitespaces and Brackets
+(use-package editorconfig
+    :ensure t
+    :config
+    (editorconfig-mode 1))
+
+;; Language Server Protocol
+(use-package lsp-mode
+    :init
+    :hook ((c-mode . lsp)
+           (c++-mode . lsp)
+           (c++-mode . platformio-conditionally-enable)
+		   (csharp-mode . lsp)
+     	   (lua-mode . lsp)
+		   (python-mode . lsp)
+           (java-mode . lsp)
+		   (web-mode . lsp)
+		   (json-mode . lsp))
+    :config
+    (setq lsp-headerline-breadcrumb-enable nil)
+    (setq lsp-auto-guess-root t)
+    (setq lsp-enable-folding nil)
+    (setq lsp-idle-delay 0.5))
+
+;; Syntax and Errors
+(use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode)
+	:config
+	(setq flycheck-check-syntax-automatically
+        '(save idle-change mode-enabled))
+	(setq flycheck-idle-change-delay 4))
+
+;; Autocompletions
 (require 'company-c-headers)
 (require 'company-capf)
 (use-package company
@@ -130,22 +172,26 @@
     (setq company-minimum-prefix-length 2)
     (global-company-mode t))
 
-(defun mars/company-backend-with-yas (backends)
-      "Add :with company-yasnippet to company BACKENDS."
-      (if (and (listp backends) (memq 'company-yasnippet backends))
-		  backends
-		(append (if (consp backends)
-		  backends
-		  (list backends))
-		'(:with company-yasnippet))))
+;;; === Language Specific Configurations ====================================
+(use-package csharp-mode
+  :ensure t)
 
-;; add yasnippet to all backends
-(setq company-backends
-	  (mapcar #'mars/company-backend-with-yas company-backends))
+(use-package glsl-mode
+    :ensure t
+    :mode (("\\.glsl\\'" . glsl-mode)))
 
-(autopair-global-mode)
+(use-package lsp-java
+  :ensure t
+  :after lsp
+  :hook (add-hook 'java-mode-hook #'lsp))
 
-;; === Web Development ================================================
+(use-package lua-mode
+  :ensure t)
+
+(use-package lsp-python-ms
+  :ensure t
+  :init (setq lsp-python-ms-auto-install-server t))
+
 (use-package web-mode
   :ensure t
   :mode (("\\.js\\'" . web-mode)
@@ -155,200 +201,81 @@
 		 ("\\.html\\'" . web-mode))
   :commands web-mode)
 
-;; === Json
 (use-package json-mode
     :ensure t)
 
-;; === Syntax Checking ============================================
-(add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
-(add-hook 'elisp-mode-hook 'display-line-numbers-mode +1)
+;;; === Specific Keybindings ================================================
+;; MacBook command usages
+(setq mac-function-modifier 'meta)
+(setq mac-command-modifier 'super)
+(setq mac-pass-command-to-system t)
+(setq select-enable-clipboard t)
 
-(require 'platformio-mode)
-(use-package lsp-mode
-  :init
-  :hook ((c-mode . lsp)
-         (c++-mode . lsp)
-         (c++-mode . platformio-conditionally-enable)
-     	 (lua-mode . lsp)
+(when (symbolp 'mac-control-modifier)
+    (global-set-key (kbd "s-z") 'undo)
+    (global-set-key (kbd "s-x") 'kill-region)
+    (global-set-key (kbd "s-c") 'kill-ring-save)
+    (global-set-key (kbd "s-v") 'yank))
 
-         (java-mode . lsp)
+(windmove-default-keybindings)
 
-		 (web-mode . lsp)
-		 (json-mode . lsp))
-  
-  :config
-  (setq lsp-headerline-breadcrumb-enable nil)
-  (setq lsp-auto-guess-root t)
-  (setq lsp-enable-folding nil)
-  (setq lsp-idle-delay 0.5))
-
-(use-package flycheck
+;; VIM-like keybindings
+(use-package evil
     :ensure t
-    :init (global-flycheck-mode)
-	:config
-	(setq flycheck-check-syntax-automatically '(save idle-change mode-enabled))
-	(setq flycheck-idle-change-delay 4))
+    :config
+    (evil-mode 1))
 
-;; === C / C++ / Obj-C Languages ======================================
-(setq-default c-basic-offset 4)
-
-;; === GLSL Shading Lanuage ===========================================
-(use-package glsl-mode
-    :ensure t
-    :mode (("\\.glsl\\'" . glsl-mode)))
-
-;; === Java Language ==================================================
-(use-package lsp-java
-  :ensure t
-  :after lsp
-  :hook (add-hook 'java-mode-hook #'lsp))
-
-;; === Lua Language ===================================================
-(use-package lua-mode
-    :ensure t)
-
-;; === Writing & Documentation  =======================================
+;;; === Writing & Documentation  ============================================
+;; Whitespace's and concentrations mode
 (use-package olivetti
-  :ensure t
-  :init
-  (add-hook 'org-mode-hook 'olivetti-mode 1)
-  :custom
-  (olivetti-body-width 170))
+    :ensure t
+    :init
+    (add-hook 'org-mode-hook 'olivetti-mode 1)
+    :custom
+    (olivetti-body-width 76))
 
+;; Deletions and indentation
 (use-package hungry-delete
-  :ensure t
-  :config
-  (setq hungry-delete-join-reluctantly t)
-  (global-hungry-delete-mode 1))
+    :ensure t
+    :config
+    (setq hungry-delete-join-reluctantly t)
+    (global-hungry-delete-mode 1))
 
+;; Organizational files
 (use-package org
     :ensure t
     :init
     (setq org-hide-emphasis-markers t)
     (setq org-startup-folded nil)
     (setq org-link-frame-setup '((file . find-file)))
+	(setq org-edit-src-content-indentation 0
+        org-src-tab-acts-natively t
+        org-src-preserve-indentation t)
     :config
-    ;; Mathematics equations
-	;;(setq org-preview-latex-image-directory "~/.emacs.d/.local/cache/org-latex")
-    ;;(setq org-latex-create-formula-image-program 'dvisvgm)
-    ;;(setq org-preview-latex-default-process 'dvisvgm)
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.0)))
+    (setq org-format-latex-options
+        (plist-put org-format-latex-options :scale 1.0)))
 
-(use-package pdf-tools
-  :defer t
-  :commands (pdf-view-mode pdf-tools-install)
-  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
-  :magic ("%PDF" . pdf-view-mode)
-  :config
-  (pdf-tools-install)
-  (define-pdf-cache-function pagelabels)
-  :hook ((pdf-view-mode-hook . (lambda() (display-line-numbers-mode -1)))
-		 (pdf-view-mode-hook . pdf-tools-enable-minor-modes)))
+(latex-preview-pane-enable)
 
 ;; Display fill column indicator
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'latex-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'latex-mode-hook 'visual-line-mode)
 (add-hook 'org-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'org-mode-hook 'visual-line-mode)
+
 (set-face-background 'fill-column-indicator "#3c3836")
-(setq-default display-fill-column-indicator-column 100)
+(setq-default display-fill-column-indicator-column 77)
 (setq-default display-fill-column-indicator-character '32)
 
 ;; Auto wrap
 (visual-line-mode t)
 
-;; LaTeX
-(latex-preview-pane-enable)
-
 ;; Minor writing modes
 (delete-selection-mode)
 
-;; === Project Management =============================================
-(use-package projectile
-  :ensure t
-  :init
-  (projectile-mode +1)
-  :bind (:map projectile-mode-map
-              ("C-c p" . projectile-command-map)))
-
-;; === Yasnippets & Company fix =======================================
-(defun check-expansion ()
-  "Check."
-  (save-excursion
-    (if (looking-at "\\_>") t
-      (backward-char 1)
-      (if (looking-at "\\.") t
-    (backward-char 1)
-    (if (looking-at "->") t nil)))))
-
-(defun do-yas-expand ()
-  (let ((yas-fallback-behavior 'return-nil))
-    (yas-expand)))
-
-(defun tab-indent-or-complete ()
-  "Tab to indent."
-  (interactive)
-  (cond
-   ((minibufferp)
-    (minibuffer-complete))
-   (t
-    (indent-for-tab-command)
-    (if (or (not yas-minor-mode)
-        (null (do-yas-expand)))
-    (if (check-expansion)
-        (progn
-          (company-manual-begin)
-          (if (null company-candidates)
-          (progn
-            (company-abort)
-            (indent-for-tab-command)))))))))
-
-(defun tab-complete-or-next-field ()
-  "Tab to complete."
-  (interactive)
-  (if (or (not yas-minor-mode)
-      (null (do-yas-expand)))
-      (if company-candidates
-      (company-complete-selection)
-    (if (check-expansion)
-      (progn
-        (company-manual-begin)
-        (if (null company-candidates)
-        (progn
-          (company-abort)
-          (yas-next-field))))
-      (yas-next-field)))))
-
-(defun expand-snippet-or-complete-selection ()
-  "Expand the snippet or complete the selection."
-  (interactive)
-  (if (or (not yas-minor-mode)
-      (null (do-yas-expand))
-      (company-abort))
-      (company-complete-selection)))
-
-(defun abort-company-or-yas ()
-  "Abort."
-  (interactive)
-  (if (null company-candidates)
-      (yas-abort-snippet)
-    (company-abort)))
-
-(global-set-key [tab] 'tab-indent-or-complete)
-(global-set-key (kbd "TAB") 'tab-indent-or-complete)
-(global-set-key [(control return)] 'company-complete-common)
-
-(define-key company-active-map [tab] 'expand-snippet-or-complete-selection)
-(define-key company-active-map (kbd "TAB") 'expand-snippet-or-complete-selection)
-
-(define-key yas-minor-mode-map [tab] nil)
-(define-key yas-minor-mode-map (kbd "TAB") nil)
-
-(define-key yas-keymap [tab] 'tab-complete-or-next-field)
-(define-key yas-keymap (kbd "TAB") 'tab-complete-or-next-field)
-(define-key yas-keymap [(control tab)] 'yas-next-field)
-(define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
-
-;; === Compilation ====================================================
+;;; === Compilation & Terminal ==============================================
+;; Open compilations window horizontal
 (defun my-compilation-hook ()
   "Compile window always at the bottom."
   (when (not (get-buffer-window "*compilation*"))
@@ -358,26 +285,76 @@
                (h (window-height w)))
           (select-window w)
           (switch-to-buffer "*compilation*")
-          (shrink-window (- h 15)))))))
-
-;; Remove autowrap in compile mode
-(add-hook 'compilation-mode-hook
-          (lambda () (visual-line-mode nil)))
-
-;; Scroll on output
-(setq compilation-scroll-output t)
-
-;; Enable Ansii colors
-(use-package ansi-color
-  :config
-  (defun my-colorize-compilation-buffer ()
-    (when (eq major-mode 'compilation-mode)
-      (ansi-color-apply-on-region compilation-filter-start (point-max))))
-  :hook (compilation-filter . my-colorize-compilation-buffer))
+            (shrink-window (- h 15)))))))
 
 (add-hook 'compilation-mode-hook 'my-compilation-hook)
 
-;; === Packages =======================================================
+;; Other compile commands
+(setq compile-command "./build.sh")
+(setq compilation-scroll-output t)
+(add-hook 'compilation-mode-hook
+          (lambda () (visual-line-mode nil)))
+
+;; Execute path from shell using ZSH
+(use-package exec-path-from-shell
+    :ensure t
+    :custom
+    (shell-file-name "/bin/zsh")
+    :init
+    (if (string-equal system-type "darwin")
+        (exec-path-from-shell-initialize)))
+
+;; Enable Ansii colors
+(use-package ansi-color
+    :config
+    (defun my-colorize-compilation-buffer ()
+        (when (eq major-mode 'compilation-mode)
+            (ansi-color-apply-on-region compilation-filter-start
+                (point-max))))
+    :hook (compilation-filter . my-colorize-compilation-buffer))
+
+;; Mini Buffer
+(add-hook 'minibuffer-setup-hook
+		  (lambda () (setq truncate-lines t)))
+
+;;; === SSH and Remote Configurations =======================================
+;; Connection to Raspberrypi
+(defun connect-hotspot-rasp ()
+  "Connect to my raspberrypi."
+  (interactive)
+  (dired "/ssh:rhuib@192.168.43.114:/home/rhuib"))
+
+(defun connect-local-rasp ()
+  "Connect to my raspberrypi."
+  (interactive)
+  (dired "/sshx11:rhuib@169.254.194.102:/home/rhuib"))
+
+(defun connect-babe-rasp ()
+  "Connect to my raspberrypi."
+  (interactive)
+  (dired "/sshx11:rhuib@192.168.2.10:/home/rhuib"))
+
+;; Allow X11 window share for raspberrypi
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-methods
+      '("sshx11"
+           (tramp-login-program        "ssh")
+           (tramp-login-args           (("-l" "%u") ("-p" "%p") ("%c")
+                                           ("-e" "none") ("-X") ("%h")))
+           (tramp-async-args           (("-q")))
+           (tramp-remote-shell         "/bin/sh")
+           (tramp-remote-shell-login   ("-l"))
+           (tramp-remote-shell-args    ("-c"))
+           (tramp-gw-args
+               (("-o" "GlobalKnownHostsFile=/dev/null")
+                   ("-o" "UserKnownHostsFile=/dev/null")
+                   ("-o" "StrictHostKeyChecking=no")
+                   ("-o" "ForwardX11=yes")))
+           (tramp-default-port         22)))
+    (tramp-set-completion-function "sshx11"
+        tramp-completion-function-alist-ssh))
+
+;; === Custom Set Variables =================================================
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -385,13 +362,13 @@
  ;; If there is more than one, they won't work right.
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(package-selected-packages
-   '(company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line pdf-tools centered-window olivetti writeroom-mode ccls platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
- '(pdf-tools-handle-upgrades nil)
- '(safe-local-variable-values
-   '((eval setq flycheck-clang-include-path
-		   (list
-			(expand-file-name "/usr/local/Cellar/glfw/3.3.2/include")))))
- '(tab-width 4))
+      '(editorconfig buffer-move omnisharp csharp-mode lsp-python-ms
+           company-glsl glsl-mode hungry-delete web-mode json-mode
+           lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane
+           mood-line centered-window olivetti writeroom-mode ccls
+           platformio-mode magit lua-mode use-package flycheck
+           exec-path-from-shell evil company-c-headers autopair yasnippet
+           company smex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
