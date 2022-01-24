@@ -1,8 +1,4 @@
-;;; package --- Summary: René Huiberts | Emacs Configuration.
-;;; Commentary:
-;;; Code:
-
-;;; === My Emacs Configuration File =========================================
+;;; === My Emacs Configuration File ===================================================
 ;; Emacs Package Manager
 (package-initialize)
 
@@ -19,7 +15,7 @@
 (setq auto-save-default nil)
 (setq make-backup-files nil)
 
-;;; === Emacs Startup =======================================================
+;;; === Emacs Startup =================================================================
 ;; Message in scratch buffer
 (defun display-startup-echo-area-message ()
   "Disable Startup message."
@@ -30,8 +26,9 @@
 (setq initial-major-mode 'org-mode)
 (setq inhibit-startup-message t)
 (setq use-dialog-box nil)
+(set-default 'truncate-lines t)
 
-;;; === Appearance ==========================================================
+;;; === Appearance ====================================================================
 ;; Window Appearance
 (when (memq window-system '(mac ns))
   (add-to-list 'default-frame-alist '(ns-appearance . dark))
@@ -41,6 +38,8 @@
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 (add-to-list 'default-frame-alist '(height . 10))
+
+(set-frame-parameter (selected-frame) 'alpha '(100 . 95))
 
 (setq frame-title-format "\n")
 (setq ns-use-proxy-icon nil)
@@ -56,18 +55,18 @@
 (tooltip-mode 0)
 
 ;; Editor Appearance
-(set-face-attribute 'default nil :font "Fira Code" :height 180)
+(set-face-attribute 'default nil :font "Fira Code" :height 170)
 
 ;; Theme
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
 
 ;; Modeline
-(mood-line-mode)
+;;(mood-line-mode)
 
+;;; === Buffers =======================================================================
 
-
-;;; === Editor Configurations ===============================================
+;;; === Editor Configurations =========================================================
 ;; Display line numbers
 (add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
 (add-hook 'elisp-mode-hook 'display-line-numbers-mode +1)
@@ -77,7 +76,9 @@
 ;; Autopair brackets
 (autopair-global-mode)
 
-;; === File management / Searching ==========================================
+;; Highlight indents
+
+;; === File management / Searching ====================================================
 (use-package dired-x
     :config
     (add-hook 'dired-mode-hook #'dired-omit-mode)
@@ -85,10 +86,14 @@
         (rx (or (seq bol (? ".") "#")
             (seq bol "." eol)
 			(seq bol ".DS_STORE" eol)
+			(seq bol "compile_commands.json" eol)
 			(seq bol ".projectile" eol)
 			(seq bol ".ccls-cache" eol)
-			(seq bol ".log/" eol)
+			(seq bol ".cache" eol)
+			(seq bol ".git" eol)
+			(seq bol "*.log" eol)
 		    (seq bol ".localized" eol))))
+    (setq insert-directory-program "gls" dired-use-ls-dired t)
     (setq dired-listing-switches "-laGh1v --group-directories-first")
     ;; Options https://oremacs.com/2015/01/13/dired-options/
     (setq dired-recursive-copies 'always))
@@ -112,7 +117,7 @@
             (ido-completing-read "Jump to bookmark: "
                 (bookmark-all-names)))))
 
-;;; === Project Management ==================================================
+;;; === Project Management ============================================================
 (use-package projectile
     :ensure t
     :init
@@ -122,20 +127,26 @@
     :config
     (setq projectile-track-known-projects-automatically nil))
 
-;;; === General Language Configurations =====================================
+;;; === General Language Configurations ===============================================
 ;; Indentations, Whitespaces and Brackets
 (use-package editorconfig
     :ensure t
     :config
     (editorconfig-mode 1))
 
+(use-package yasnippet
+    :ensure t
+    :init
+    (setq yas-snippet-dirs '("~/.emacs.snippets/"))
+    :config
+    (yas-global-mode 1))
+
 ;; Language Server Protocol
 (use-package lsp-mode
     :init
     :hook ((c-mode . lsp)
            (c++-mode . lsp)
-           (c++-mode . platformio-conditionally-enable)
-		   (csharp-mode . lsp)
+           (csharp-mode . lsp)
      	   (lua-mode . lsp)
 		   (python-mode . lsp)
            (java-mode . lsp)
@@ -145,18 +156,26 @@
     (setq lsp-headerline-breadcrumb-enable nil)
     (setq lsp-auto-guess-root t)
     (setq lsp-enable-folding nil)
-    (setq lsp-idle-delay 0.5))
+    (setq lsp-idle-delay 0.5)
+    
+    (progn
+    (lsp-register-client
+     (make-lsp-client :new-connection (lsp-tramp-connection "clangd")
+                      :major-modes '(c-mode c++-mode)
+                      :remote? t
+                      :server-id 'clangd-remote))))
 
 ;; Syntax and Errors
 (use-package flycheck
     :ensure t
     :init (global-flycheck-mode)
 	:config
+    (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 	(setq flycheck-check-syntax-automatically
         '(save idle-change mode-enabled))
 	(setq flycheck-idle-change-delay 4))
 
-;; Autocompletions
+;; Auto-completion
 (require 'company-c-headers)
 (require 'company-capf)
 (use-package company
@@ -170,9 +189,12 @@
     (add-to-list 'company-backends 'company-c-headers)
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
+    (setq company-c-headers-path-system '("/usr/local/include/"
+                   "/Library/Developer/CommandLineTools/usr/include/c++/v1"))
     (global-company-mode t))
 
-;;; === Language Specific Configurations ====================================
+
+;;; === Language Specific Configurations ==============================================
 (use-package csharp-mode
   :ensure t)
 
@@ -204,7 +226,7 @@
 (use-package json-mode
     :ensure t)
 
-;;; === Specific Keybindings ================================================
+;;; === Specific Keybindings ==========================================================
 ;; MacBook command usages
 (setq mac-function-modifier 'meta)
 (setq mac-command-modifier 'super)
@@ -219,13 +241,29 @@
 
 (windmove-default-keybindings)
 
+;; Dired list to dired
+(global-set-key (kbd "C-x C-d") #'ido-dired)
+
+;; Compile keybinding
+(global-set-key (kbd "C-x c") #'projectile-compile-project)
+(global-set-key (kbd "C-x C-c") #'projectile-compile-project)
+
 ;; VIM-like keybindings
 (use-package evil
     :ensure t
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
     :config
     (evil-mode 1))
 
-;;; === Writing & Documentation  ============================================
+(use-package evil-collection
+    :after evil
+    :ensure t
+    :config
+    (evil-collection-init))
+
+;;; === Writing & Documentation  ======================================================
 ;; Whitespace's and concentrations mode
 (use-package olivetti
     :ensure t
@@ -265,7 +303,7 @@
 (add-hook 'org-mode-hook 'visual-line-mode)
 
 (set-face-background 'fill-column-indicator "#3c3836")
-(setq-default display-fill-column-indicator-column 77)
+(setq-default display-fill-column-indicator-column 87)
 (setq-default display-fill-column-indicator-character '32)
 
 ;; Auto wrap
@@ -274,7 +312,7 @@
 ;; Minor writing modes
 (delete-selection-mode)
 
-;;; === Compilation & Terminal ==============================================
+;;; === Compilation & Terminal ========================================================
 ;; Open compilations window horizontal
 (defun my-compilation-hook ()
   "Compile window always at the bottom."
@@ -290,7 +328,8 @@
 (add-hook 'compilation-mode-hook 'my-compilation-hook)
 
 ;; Other compile commands
-(setq compile-command "./build.sh")
+(setenv "PKG_CONFIG_PATH" "/usr/local/lib/pkgconfig")
+(setq compile-command "make")
 (setq compilation-scroll-output t)
 (add-hook 'compilation-mode-hook
           (lambda () (visual-line-mode nil)))
@@ -317,24 +356,109 @@
 (add-hook 'minibuffer-setup-hook
 		  (lambda () (setq truncate-lines t)))
 
-;;; === SSH and Remote Configurations =======================================
-;; Connection to Raspberrypi
-(defun connect-hotspot-rasp ()
-  "Connect to my raspberrypi."
-  (interactive)
-  (dired "/ssh:rhuib@192.168.43.114:/home/rhuib"))
+;;; === Bug fixes and custom functions ================================================
+;; Yasnippets & Company fix
+(defun mars/company-backend-with-yas (backends)
+      "Add :with company-yasnippet to company BACKENDS."
+      (if (and (listp backends) (memq 'company-yasnippet backends))
+		  backends
+		(append (if (consp backends)
+		  backends
+		  (list backends))
+		'(:with company-yasnippet))))
 
-(defun connect-local-rasp ()
+;; add yasnippet to all backends
+(setq company-backends
+	(mapcar #'mars/company-backend-with-yas company-backends))
+
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+    (backward-char 1)
+    (if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (cond
+   ((minibufferp)
+    (minibuffer-complete))
+   (t
+    (indent-for-tab-command)
+    (if (or (not yas/minor-mode)
+        (null (do-yas-expand)))
+    (if (check-expansion)
+        (progn
+          (company-manual-begin)
+          (if (null company-candidates)
+          (progn
+            (company-abort)
+            (indent-for-tab-command)))))))))
+
+(defun tab-complete-or-next-field ()
+  (interactive)
+  (if (or (not yas/minor-mode)
+      (null (do-yas-expand)))
+      (if company-candidates
+      (company-complete-selection)
+    (if (check-expansion)
+      (progn
+        (company-manual-begin)
+        (if (null company-candidates)
+        (progn
+          (company-abort)
+          (yas-next-field))))
+      (yas-next-field)))))
+
+(defun expand-snippet-or-complete-selection ()
+  (interactive)
+  (if (or (not yas/minor-mode)
+      (null (do-yas-expand))
+      (company-abort))
+      (company-complete-selection)))
+
+(defun abort-company-or-yas ()
+  (interactive)
+  (if (null company-candidates)
+      (yas-abort-snippet)
+    (company-abort)))
+
+(global-set-key [tab] 'tab-indent-or-complete)
+(global-set-key (kbd "TAB") 'tab-indent-or-complete)
+(global-set-key [(control return)] 'company-complete-common)
+
+(define-key company-active-map [tab] 'expand-snippet-or-complete-selection)
+(define-key company-active-map (kbd "TAB")
+    'expand-snippet-or-complete-selection)
+
+(define-key yas-minor-mode-map [tab] nil)
+(define-key yas-minor-mode-map (kbd "TAB") nil)
+
+(define-key yas-keymap [tab] 'tab-complete-or-next-field)
+(define-key yas-keymap (kbd "TAB") 'tab-complete-or-next-field)
+(define-key yas-keymap [(control tab)] 'yas-next-field)
+(define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
+
+;;; === SSH and Remote Configurations =================================================
+;; Connection to Raspberrypi
+(defun connect-rasp ()
   "Connect to my raspberrypi."
   (interactive)
   (dired "/sshx11:rhuib@169.254.194.102:/home/rhuib"))
 
-(defun connect-babe-rasp ()
+(defun connect-rasp-hotspot ()
   "Connect to my raspberrypi."
   (interactive)
-  (dired "/sshx11:rhuib@192.168.2.10:/home/rhuib"))
+    (dired "/sshx11:rhuib@192.168.222.114:/home/rhuib"))
 
 ;; Allow X11 window share for raspberrypi
+(require 'tramp)
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 (with-eval-after-load 'tramp
   (add-to-list 'tramp-methods
       '("sshx11"
@@ -354,25 +478,22 @@
     (tramp-set-completion-function "sshx11"
         tramp-completion-function-alist-ssh))
 
-;; === Custom Set Variables =================================================
+;; === Custom Set Variables ===========================================================
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
- '(package-selected-packages
-      '(editorconfig buffer-move omnisharp csharp-mode lsp-python-ms
-           company-glsl glsl-mode hungry-delete web-mode json-mode
-           lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane
-           mood-line centered-window olivetti writeroom-mode ccls
-           platformio-mode magit lua-mode use-package flycheck
-           exec-path-from-shell evil company-c-headers autopair yasnippet
-           company smex)))
+ '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
+ '(highlight-indent-guides-method 'column)
+    '(package-selected-packages
+         '(highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
+    '(tramp-remote-path
+         '("/usr/local/clang_9.0.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/games" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin" "/usr/local/clang_9.0.0/bin")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-;;; .emacs ends here
