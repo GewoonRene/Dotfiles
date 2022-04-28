@@ -15,6 +15,13 @@
 (setq auto-save-default nil)
 (setq make-backup-files nil)
 
+
+;; https://www.youtube.com/watch?v=51eSeqcaikM
+(recentf-mode 1)
+(global-set-key "\C-x\ \C-r" 'recentf-open-files)
+
+(save-place-mode 1)
+
 ;;; === Emacs Startup =================================================================
 ;; Message in scratch buffer
 (defun display-startup-echo-area-message ()
@@ -39,7 +46,7 @@
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 (add-to-list 'default-frame-alist '(height . 10))
 
-(set-frame-parameter (selected-frame) 'alpha '(100 . 95))
+(set-frame-parameter (selected-frame) 'alpha '(100 . 100))
 
 (setq frame-title-format "\n")
 (setq ns-use-proxy-icon nil)
@@ -56,16 +63,16 @@
 
 ;; Editor Appearance
 (set-face-attribute 'default nil :font "Fira Code" :height 170)
+(setq-default line-spacing 0.1)
 
 ;; Theme
 (setq custom-safe-themes t)
 (load-theme 'custom-gruvbox-dark-soft t)
 
 ;; Modeline
-;;(mood-line-mode)
+(mood-line-mode)
 
-;;; === Buffers =======================================================================
-
+;;; === Buffers =====================================================================
 ;;; === Editor Configurations =========================================================
 ;; Display line numbers
 (add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
@@ -76,8 +83,6 @@
 ;; Autopair brackets
 (autopair-global-mode)
 
-;; Highlight indents
-
 ;; === File management / Searching ====================================================
 (use-package dired-x
     :config
@@ -86,11 +91,13 @@
         (rx (or (seq bol (? ".") "#")
             (seq bol "." eol)
 			(seq bol ".DS_STORE" eol)
-			(seq bol "compile_commands.json" eol)
 			(seq bol ".projectile" eol)
 			(seq bol ".ccls-cache" eol)
+			(seq bol ".ccls" eol)
+			(seq bol "compile_commands.json" eol)
 			(seq bol ".cache" eol)
 			(seq bol ".git" eol)
+			(seq bol ".pio" eol)
 			(seq bol "*.log" eol)
 		    (seq bol ".localized" eol))))
     (setq insert-directory-program "gls" dired-use-ls-dired t)
@@ -163,7 +170,7 @@
      (make-lsp-client :new-connection (lsp-tramp-connection "clangd")
                       :major-modes '(c-mode c++-mode)
                       :remote? t
-                      :server-id 'clangd-remote))))
+         :server-id 'clangd-remote))))
 
 ;; Syntax and Errors
 (use-package flycheck
@@ -186,13 +193,14 @@
         ("C-p" . company-select-previous)
         ("<tab>" . company-complete-selection))
     :config
-    (add-to-list 'company-backends 'company-c-headers)
+   (add-to-list 'company-backends 'company-c-headers)
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
     (setq company-c-headers-path-system '("/usr/local/include/"
                    "/Library/Developer/CommandLineTools/usr/include/c++/v1"))
     (global-company-mode t))
 
+;;; === Embedded Systems Configurations ===============================================
 
 ;;; === Language Specific Configurations ==============================================
 (use-package csharp-mode
@@ -225,6 +233,14 @@
 
 (use-package json-mode
     :ensure t)
+
+;;; === LISP ==========================================================================
+(use-package slime
+    :ensure t
+    :init
+    (slime-setup '(slime-fancy slime-quicklisp slime-asdf))
+    :config
+    (setq inferior-lisp-program (executable-find "sbcl")))
 
 ;;; === Specific Keybindings ==========================================================
 ;; MacBook command usages
@@ -290,8 +306,29 @@
         org-src-tab-acts-natively t
         org-src-preserve-indentation t)
     :config
+    (setq org-agenda-start-on-weekday nil)
+    (setq org-agenda-todo-list-sublevels '2)
+    (setq org-log-done 'time)
+    (setq org-agenda-files '("~/Documentations/agenda"))
+    (setq org-agenda-use-time-grid nil)
+    (setq org-refile-targets '(("~/Documentations/agenda/archive.org" :maxlevel . 1)))
+    (advice-add 'org-refile :after 'org-save-all-org-buffers)
+    (setq org-emphasis-alist
+        '(("*" (bold))
+          ("/" (italic))
+          ("_" (underline))))
     (setq org-format-latex-options
         (plist-put org-format-latex-options :scale 1.0)))
+
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
+
+;; LATEX
+;; Flyspell dubble tap fix
+(eval-after-load "flyspell"
+  '(progn
+     (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
+       (define-key flyspell-mouse-map [mouse-3] #'undefined)))
 
 (latex-preview-pane-enable)
 
@@ -312,20 +349,17 @@
 ;; Minor writing modes
 (delete-selection-mode)
 
+;;; === Org Capture ===================================================================
+(setq org-capture-templates
+    '(("t" "Task" entry (file+headline "~/Documentations/agenda/schedular.org" "*Tasks* ")
+          "** TODO %? [/]\n   + [ ] ")
+      ("b" "Task bookmark" entry (file+headline "~/Documentations/agenda/schedular.org" "*Tasks* ")
+          "** TODO %? [/]\n   + [ ] \n %a")
+      ("s" "Socials" entry (file+headline "~/Documentations/agenda/socials.org" "*Socials* ")
+          "** %?")
+      ("r" "Reminder" entry (file+headline "~/Documentations/agenda/schedular.org" "*Tasks* ")
+          "** TODO %?")))
 ;;; === Compilation & Terminal ========================================================
-;; Open compilations window horizontal
-(defun my-compilation-hook ()
-  "Compile window always at the bottom."
-  (when (not (get-buffer-window "*compilation*"))
-    (save-selected-window
-      (save-excursion
-        (let* ((w (split-window-vertically))
-               (h (window-height w)))
-          (select-window w)
-          (switch-to-buffer "*compilation*")
-            (shrink-window (- h 15)))))))
-
-(add-hook 'compilation-mode-hook 'my-compilation-hook)
 
 ;; Other compile commands
 (setenv "PKG_CONFIG_PATH" "/usr/local/lib/pkgconfig")
@@ -488,7 +522,7 @@
  '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
+         '(slime ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
     '(tramp-remote-path
          '("/usr/local/clang_9.0.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/games" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin" "/usr/local/clang_9.0.0/bin")))
 (custom-set-faces
