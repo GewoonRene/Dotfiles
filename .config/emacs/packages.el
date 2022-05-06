@@ -1,7 +1,7 @@
 ;;; packages.el --- Emacs packages configurations           -*- lexical-binding: t; -*-
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+(add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
 
 (defvar rhuib/package-contents-refreshed nil)
 
