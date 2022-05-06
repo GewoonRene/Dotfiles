@@ -1,10 +1,56 @@
-;;; === My Emacs Configuration File ===================================================
-;; Emacs Package Manager
+;;; .emacs --- Rhuibertsjr Emacs configuration              -*- lexical-binding: t; -*-
+
+;; Initialize 
 (package-initialize)
 
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+;; === Packages Management ============================================================
+(load "~/.config/emacs/packages.el")
+
+(rhuib/require
+    ; Packages
+    'use-package
+    ; Language Server Protocol
+    'lsp-mode
+    'ccls
+    ; Lisps
+    'highlight-indent-guides
+    ; Spelling & Grammer
+    'company
+    'company-c-headers
+    'flycheck
+    ; Keyboard
+    'evil
+    'evil-collection
+    ; Languages
+    'platformio-mode
+    'typescript-mode
+    'web-mode
+    'json-mode
+    ; Writing
+    'latex-preview-pane
+    ; Appearance
+    'mood-line
+    'olivetti
+    ; Miscellaneous
+    'exec-path-from-shell
+    'smex                       
+    'magit
+    'yasnippet
+    'autopair
+    'hungry-delete
+    'editorconfig
+    'buffer-move)
+
+;; === Emacs Startup ==================================================================
+(defun display-startup-echo-area-message ()
+  "Disable Startup message."
+    (message " "))
+
+(setq initial-scratch-message nil)
+(setq initial-major-mode 'org-mode)
+(setq inhibit-startup-message t)
+(setq use-dialog-box nil)
+(setq truncate-lines t)
 
 ;; Backup files
 (setq backup-directory-alist '(("." . "~/.emacs_saves")))
@@ -15,47 +61,32 @@
 (setq auto-save-default nil)
 (setq make-backup-files nil)
 
-
-;; https://www.youtube.com/watch?v=51eSeqcaikM
-(recentf-mode 1)
-(global-set-key "\C-x\ \C-r" 'recentf-open-files)
-
 (save-place-mode 1)
 
-;;; === Emacs Startup =================================================================
-;; Message in scratch buffer
-(defun display-startup-echo-area-message ()
-  "Disable Startup message."
-    (message " "))
-
-;; Initialization
-(setq initial-scratch-message nil)
-(setq initial-major-mode 'org-mode)
-(setq inhibit-startup-message t)
-(setq use-dialog-box nil)
-(set-default 'truncate-lines t)
-
 ;;; === Appearance ====================================================================
-;; Window Appearance
+
 (when (memq window-system '(mac ns))
   (add-to-list 'default-frame-alist '(ns-appearance . dark))
-    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)))
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+    (add-to-list 'default-frame-alist '(ns-appearance . dark)))
 
-(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(ns-appearance . dark))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
 (add-to-list 'default-frame-alist '(height . 10))
 
 (set-frame-parameter (selected-frame) 'alpha '(100 . 100))
 
-(setq frame-title-format "\n")
-(setq ns-use-proxy-icon nil)
 (setq frame-size-history nil)
 (setq ring-bell-function 'ignore)
+(setq ns-use-proxy-icon nil)
 
 (if (string-equal system-type "darwin")
-    (menu-bar-mode 1)
-  (menu-bar-mode 0))
+    (progn
+        (menu-bar-mode 1)
+        (setq frame-title-format "\n"))
+    (progn
+        (menu-bar-mode 0)
+        (setq frame-title-format "")))
 
 (scroll-bar-mode 0)
 (tool-bar-mode 0)
@@ -72,7 +103,6 @@
 ;; Modeline
 (mood-line-mode)
 
-;;; === Buffers =====================================================================
 ;;; === Editor Configurations =========================================================
 ;; Display line numbers
 (add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
@@ -82,6 +112,11 @@
 
 ;; Autopair brackets
 (autopair-global-mode)
+
+;; Show parenthesis
+(add-hook 'lisp-mode-hook 'show-paren-mode t)
+(setq show-paren-delay 0)
+(set-face-background 'show-paren-match (face-background 'default))
 
 ;; === File management / Searching ====================================================
 (use-package dired-x
@@ -184,7 +219,6 @@
 
 ;; Auto-completion
 (require 'company-c-headers)
-(require 'company-capf)
 (use-package company
     :init
     (setq company-backends '((company-capf company-c-headers company-glsl)))
@@ -200,28 +234,7 @@
                    "/Library/Developer/CommandLineTools/usr/include/c++/v1"))
     (global-company-mode t))
 
-;;; === Embedded Systems Configurations ===============================================
-
 ;;; === Language Specific Configurations ==============================================
-(use-package csharp-mode
-  :ensure t)
-
-(use-package glsl-mode
-    :ensure t
-    :mode (("\\.glsl\\'" . glsl-mode)))
-
-(use-package lsp-java
-  :ensure t
-  :after lsp
-  :hook (add-hook 'java-mode-hook #'lsp))
-
-(use-package lua-mode
-  :ensure t)
-
-(use-package lsp-python-ms
-  :ensure t
-  :init (setq lsp-python-ms-auto-install-server t))
-
 (use-package web-mode
   :ensure t
   :mode (("\\.js\\'" . web-mode)
@@ -233,14 +246,6 @@
 
 (use-package json-mode
     :ensure t)
-
-;;; === LISP ==========================================================================
-(use-package slime
-    :ensure t
-    :init
-    (slime-setup '(slime-fancy slime-quicklisp slime-asdf))
-    :config
-    (setq inferior-lisp-program (executable-find "sbcl")))
 
 ;;; === Specific Keybindings ==========================================================
 ;; MacBook command usages
@@ -478,53 +483,16 @@
 (define-key yas-keymap [(control tab)] 'yas-next-field)
 (define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
 
-;;; === SSH and Remote Configurations =================================================
-;; Connection to Raspberrypi
-(defun connect-rasp ()
-  "Connect to my raspberrypi."
-  (interactive)
-  (dired "/sshx11:rhuib@169.254.194.102:/home/rhuib"))
-
-(defun connect-rasp-hotspot ()
-  "Connect to my raspberrypi."
-  (interactive)
-    (dired "/sshx11:rhuib@192.168.222.114:/home/rhuib"))
-
-;; Allow X11 window share for raspberrypi
-(require 'tramp)
-(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-(with-eval-after-load 'tramp
-  (add-to-list 'tramp-methods
-      '("sshx11"
-           (tramp-login-program        "ssh")
-           (tramp-login-args           (("-l" "%u") ("-p" "%p") ("%c")
-                                           ("-e" "none") ("-X") ("%h")))
-           (tramp-async-args           (("-q")))
-           (tramp-remote-shell         "/bin/sh")
-           (tramp-remote-shell-login   ("-l"))
-           (tramp-remote-shell-args    ("-c"))
-           (tramp-gw-args
-               (("-o" "GlobalKnownHostsFile=/dev/null")
-                   ("-o" "UserKnownHostsFile=/dev/null")
-                   ("-o" "StrictHostKeyChecking=no")
-                   ("-o" "ForwardX11=yes")))
-           (tramp-default-port         22)))
-    (tramp-set-completion-function "sshx11"
-        tramp-completion-function-alist-ssh))
-
 ;; === Custom Set Variables ===========================================================
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
  '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(slime ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex))
-    '(tramp-remote-path
-         '("/usr/local/clang_9.0.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/games" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin" "/usr/local/clang_9.0.0/bin")))
+         '(company-capf package-list slime-company slime ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair yasnippet company smex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
