@@ -179,7 +179,7 @@
 (use-package yasnippet
     :ensure t
     :init
-    (setq yas-snippet-dirs '("~/.emacs.snippets/"))
+    (setq yas-snippet-dirs '("~/.config/emacs/snippets/"))
     :config
     (yas-global-mode 1))
 
