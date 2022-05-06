@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: fori (int = 0; > ; ++) { ... }
+# key: fori
+# --
+for (int ${1:init} = 0; $1 < ${2:condition}; $1++) {
+$0
+}
