@@ -15,7 +15,7 @@
  '(secondary-selection ((((class color) (min-colors 16777215)) (:background "#3c3836")) (((class color) (min-colors 255)) (:background "#3a3a3a"))))
  '(minibuffer-prompt ((((class color) (min-colors 16777215)) (:background "#32302f" :foreground "#b8bb26" :bold t)) (((class color) (min-colors 255)) (:background "#303030" :foreground "#afaf00" :bold t))))
  '(vertical-border ((((class color) (min-colors 16777215)) (:foreground "#504945")) (((class color) (min-colors 255)) (:foreground "#4e4e4e"))))
- '(internal-border ((((class color) (min-colors 16777215)) (:background "#32302f")) (((class color) (min-colors 254)) (:background "#4e4e4e"))))
+ '(internal-border ((((class color) (min-colors 16777215)) (:background "#303030")) (((class color) (min-colors 254)) (:background "#4e4e4e"))))
  '(window-divider ((((class color) (min-colors 16777215)) (:foreground "#504945")) (((class color) (min-colors 255)) (:foreground "#4e4e4e"))))
  '(link ((((class color) (min-colors 16777215)) (:foreground "#458588" :underline t)) (((class color) (min-colors 255)) (:foreground "#87afaf" :underline t))))
  '(shadow ((((class color) (min-colors 16777215)) (:foreground "#7c6f64")) (((class color) (min-colors 255)) (:foreground "#767676"))))
