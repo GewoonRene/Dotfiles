@@ -312,6 +312,7 @@
     :init
     (add-hook 'org-mode-hook 'olivetti-mode 1)
     :custom
+    (olivetti-enable-borders t)
     (olivetti-body-width 76))
 
 ;; Deletions and indentation
@@ -483,38 +484,30 @@
 (define-key yas-keymap (kbd "C-g") 'abort-company-or-yas)
 
 ;;; === Compilation & Terminal =====================================================
-;; Switch buffer
-(defun toggle-window-split ()
-  (interactive)
-  (if (= (count-windows) 2)
-      (let* ((this-win-buffer (window-buffer))
-             (next-win-buffer (window-buffer (next-window)))
-             (this-win-edges (window-edges (selected-window)))
-             (next-win-edges (window-edges (next-window)))
-             (this-win-2nd (not (and (<= (car this-win-edges)
-                                         (car next-win-edges))
-                                     (<= (cadr this-win-edges)
-                                         (cadr next-win-edges)))))
-             (splitter
-              (if (= (car this-win-edges)
-                     (car (window-edges (next-window))))
-                  'split-window-horizontally
-                'split-window-vertically)))
-        (delete-other-windows)
-        (let ((first-win (selected-window)))
-          (funcall splitter)
-          (if this-win-2nd (other-window 1))
-          (set-window-buffer (selected-window) this-win-buffer)
-          (set-window-buffer (next-window) next-win-buffer)
-          (select-window first-win)
-          (if this-win-2nd (other-window 1))))))
+;; Compilation buffer to horizontal
+(defun my-compilation-hook ()
+  "Compile window always at the bottom."
+  (when (not (get-buffer-window "*compilation*"))
+    (save-selected-window
+      (save-excursion
+        (let* ((w (split-window-vertically))
+               (h (window-height w)))
+          (select-window w)
+          (switch-to-buffer "*compilation*")
+            (shrink-window (- h 15)))))))
+
+(add-hook 'compilation-mode-hook 'my-compilation-hook)
+
+;; Remove autowrap in compile mode
+(add-hook 'compilation-mode-hook
+          (lambda () (visual-line-mode nil)))
+
+;; Scroll on output
+(setq compilation-scroll-output t)
 
 ;; Other compile commands
 (setenv "PKG_CONFIG_PATH" "/usr/local/lib/pkgconfig")
 (setq compile-command "make")
-(setq compilation-scroll-output t)
-(add-hook 'compilation-mode-hook
-          (lambda () (visual-line-mode nil)))
 
 ;; Execute path from shell using ZSH
 (use-package exec-path-from-shell
@@ -547,7 +540,14 @@
  '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
+         '(yasnippet racket-mode sly company-capf package-list ccls unicode-fonts
+              highlight-indent-guides evil-collection eglot flycheck-pkg-config
+              company-irony irony editorconfig buffer-move omnisharp csharp-mode
+              lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode
+              lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane
+              mood-line centered-window olivetti writeroom-mode platformio-mode
+              magit lua-mode use-package flycheck exec-path-from-shell evil
+              company-c-headers autopair company smex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
