@@ -41,7 +41,8 @@
     'autopair
     'hungry-delete
     'editorconfig
-    'buffer-move)
+    'buffer-move
+    'hl-todo)
 
 ;; === Emacs Startup ===============================================================
 (defun display-startup-echo-area-message ()
@@ -105,6 +106,15 @@
 
 ;; Modeline
 (mood-line-mode)
+
+;; Highlight ToDo 
+(use-package hl-todo
+    :ensure t
+    :config
+    (setq hl-todo-keyword-faces
+	    '(("TODO" . "#b8bb26")
+	      ("BUG"  . "#fb4933")))
+    (global-hl-todo-mode +1))
 
 ;;; === Editor Configurations ======================================================
 ;; Display line numbers
@@ -335,7 +345,7 @@
     :config
     (setq org-agenda-span 10
       org-agenda-start-on-weekday nil
-      org-agenda-start-day "-3d")
+      org-agenda-start-day "-2d")
     (setq org-agenda-start-on-weekday nil)
     (setq org-agenda-todo-list-sublevels '2)
     (setq org-log-done 'time)
@@ -540,14 +550,7 @@
  '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(yasnippet racket-mode sly company-capf package-list ccls unicode-fonts
-              highlight-indent-guides evil-collection eglot flycheck-pkg-config
-              company-irony irony editorconfig buffer-move omnisharp csharp-mode
-              lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode
-              lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane
-              mood-line centered-window olivetti writeroom-mode platformio-mode
-              magit lua-mode use-package flycheck exec-path-from-shell evil
-              company-c-headers autopair company smex)))
+         '(hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
