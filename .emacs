@@ -30,6 +30,7 @@
     'web-mode
     'json-mode
     ; Writing
+    'org-roam
     'latex-preview-pane
     ; Appearance
     'mood-line
@@ -291,6 +292,9 @@
 
 (windmove-default-keybindings)
 
+;; Ido insert space
+(define-key minibuffer-local-completion-map (kbd "SPC") 'self-insert-command)
+
 ;; Dired list to dired
 (global-set-key (kbd "C-x C-d") #'ido-dired)
 
@@ -367,6 +371,18 @@
 
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
+
+(use-package org-roam
+    :after org
+    :ensure t
+    :custom
+    (org-roam-directory "~/Documentations/wiki")
+    :init (setq org-roam-v2-ackt t)
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert))
+    :config
+    (org-roam-setup))
 
 ;; LATEX
 ;; Flyspell dubble tap fix
@@ -550,7 +566,7 @@
  '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
+         '(org-roam hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
