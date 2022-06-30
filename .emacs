@@ -10,8 +10,13 @@
     ; Packages
     'use-package
     ; Language Server Protocol
+    'eglot
     'lsp-mode
     'ccls
+    ; Search
+    'smex
+    'ido-completing-read+
+    'ido-yes-or-no
     ; Lisps
     'sly
     'racket-mode
@@ -33,11 +38,10 @@
     'org-roam
     'latex-preview-pane
     ; Appearance
-    'mood-line
     'olivetti
     ; Miscellaneous
     'exec-path-from-shell
-    'smex                       
+                          
     'magit
     'autopair
     'hungry-delete
@@ -101,12 +105,50 @@
 (set-face-attribute 'default nil :font "Fira Code" :height 170)
 (setq-default line-spacing 0.1)
 
-;; Theme
 (setq custom-safe-themes t)
+(setq custom-theme-load-path
+    '("~/.config/emacs/themes/"
+      "~/Documentations/projects/project-gruverboxer/"
+      "/Users/renehuiberts/.emacs.d/elpa/base16-theme-20220526.1015/"
+      "/Users/renehuiberts/.emacs.d/elpa/gruvbox-theme-20220101.1208/"))
 (load-theme 'custom-gruvbox-dark-soft t)
 
 ;; Modeline
-(mood-line-mode)
+(setq-default
+ mode-line-format
+ '(
+   ;; point position
+   (8
+    (:propertize " %l:" face font-lock-defaults)
+    (:eval (propertize "%c" 'face (if (>= (current-column) 80)
+                                      'font-lock-warning-face
+                                    'font-lock-defaults))))
+
+   ;; major modes
+   (:propertize "%m: " face font-lock-defaults
+                help-echo buffer-file-coding-system)
+
+   ;; shortened directory (if buffer have a corresponding file)
+   (:eval
+    (when (buffer-file-name)
+      (propertize (shorten-directory default-directory 25)
+                  'face 'font-lock-comment-face)))
+
+   ;; buffer name
+   (:propertize "%b" face font-lock-defaults)))
+
+(defun shorten-directory (dir max-length)
+  "Show up to `max-length' characters of a directory name `dir'."
+  (let ((path (reverse (split-string (abbreviate-file-name dir) "/")))
+        (output ""))
+    (when (and path (equal "" (car path)))
+      (setq path (cdr path)))
+    (while (and path (< (length output) (- max-length 4)))
+      (setq output (concat (car path) "/" output))
+      (setq path (cdr path)))
+    (when path
+      (setq output (concat "./" output)))
+    output))
 
 ;; Highlight ToDo 
 (use-package hl-todo
@@ -116,6 +158,9 @@
 	    '(("TODO" . "#b8bb26")
 	      ("BUG"  . "#fb4933")))
     (global-hl-todo-mode +1))
+
+(use-package autothemer
+    :ensure t)
 
 ;;; === Editor Configurations ======================================================
 ;; Display line numbers
@@ -170,9 +215,10 @@
     (global-set-key (kbd "M-x") 'smex)
     :config
 	(add-to-list 'ido-ignore-files "\\.DS_Store")
+    (ido-yes-or-no-mode 1)
+    (ido-ubiquitous-mode 1)
     (ido-everywhere 1)
-    (ido-mode 1)
-	(setq ido-file-extensions-order '(".emacs")))
+    (ido-mode 1))
 
 ;; Bookmarks
 (global-set-key (kbd "C-x C-g")
@@ -214,24 +260,14 @@
     (setq lsp-headerline-breadcrumb-enable nil)
     (setq lsp-auto-guess-root t)
     (setq lsp-enable-folding nil)
-    (setq lsp-idle-delay 0.5)
-    
-    (progn
-    (lsp-register-client
-     (make-lsp-client :new-connection (lsp-tramp-connection "clangd")
-                      :major-modes '(c-mode c++-mode)
-                      :remote? t
-         :server-id 'clangd-remote))))
+    (setq lsp-idle-delay 0.5))
 
-;; Syntax and Errors
-(use-package flycheck
+(use-package lsp-ui
     :ensure t
-    :init (global-flycheck-mode)
-	:config
-    (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
-	(setq flycheck-check-syntax-automatically
-        '(save idle-change mode-enabled))
-	(setq flycheck-idle-change-delay 4))
+    :after lsp-mode
+    :requires lsp-mode flycheck
+    :custom
+    (lsp-ui-sideline-show-diagnostics t))
 
 ;; C syntax
 (setq c-default-style '((c-mode . "linux")))
@@ -256,7 +292,7 @@
    (add-to-list 'company-backends 'company-c-headers)
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 2)
-    (setq company-c-headers-path-system '("/usr/local/include/"
+    (setq company-c-headers-path-system '(
                    "/Library/Developer/CommandLineTools/usr/include/c++/v1"))
     (global-company-mode t))
 
@@ -289,8 +325,6 @@
     (global-set-key (kbd "s-x") 'kill-region)
     (global-set-key (kbd "s-c") 'kill-ring-save)
     (global-set-key (kbd "s-v") 'yank))
-
-(windmove-default-keybindings)
 
 ;; Ido insert space
 (define-key minibuffer-local-completion-map (kbd "SPC") 'self-insert-command)
@@ -342,6 +376,7 @@
     :init
     (setq org-hide-emphasis-markers t)
     (setq org-startup-folded nil)
+    (setq org-completion-use-ido t)
     (setq org-link-frame-setup '((file . find-file)))
 	(setq org-edit-src-content-indentation 0
         org-src-tab-acts-natively t
@@ -555,7 +590,7 @@
 
 ;; Mini Buffer
 (add-hook 'minibuffer-setup-hook
-		  (lambda () (setq truncate-lines t)))
+	(lambda () (setq truncate-lines t)))
 
 ;; === Custom Set Variables ========================================================
 (custom-set-variables
@@ -563,13 +598,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(flycheck-clang-include-path '("/usr/local/lib" "/usr/local/include"))
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(org-roam hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane mood-line centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
+         '(ido-yes-or-no-mode ido-yes-or-no 'yasnippet 'yasnippet gruvbox-theme base16-theme org-roam hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
