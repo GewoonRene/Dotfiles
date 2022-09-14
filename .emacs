@@ -1,16 +1,15 @@
-;;; .emacs --- Rhuibertsjr Emacs configuration           -*- lexical-binding: t; -*-
+;;; .emacs --- Rhuibertsjr Emacs configuration            -*- lexical-binding: t; -*-
 
 ;; Initialize 
 (package-initialize)
 
-;; === Packages Management =========================================================
+;; === Packages Management ==========================================================
 (load "~/.config/emacs/packages.el")
 
 (rhuib/require
     ; Packages
     'use-package
     ; Language Server Protocol
-    'eglot
     'lsp-mode
     'ccls
     ; Search
@@ -24,8 +23,10 @@
     ; Spelling & Grammer
     'company
     'company-c-headers
+    'company-php
     'flycheck
     'yasnippet
+    'clang-format
     ; Keyboard
     'evil
     'evil-collection
@@ -38,10 +39,10 @@
     'org-roam
     'latex-preview-pane
     ; Appearance
-    'olivetti
+    'tree-sitter
+    'tree-sitter-langs
     ; Miscellaneous
     'exec-path-from-shell
-                          
     'magit
     'autopair
     'hungry-delete
@@ -73,9 +74,8 @@
 (set-default 'truncate-lines t)
 
 ;;; === Appearance =================================================================
-
 (when (memq window-system '(mac ns))
-  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+    (add-to-list 'default-frame-alist '(ns-appearance . dark))
     (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
     (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
     (add-to-list 'default-frame-alist '(ns-appearance . dark)))
@@ -102,16 +102,16 @@
 (tooltip-mode 0)
 
 ;; Editor Appearance
-(set-face-attribute 'default nil :font "Fira Code" :height 170)
-(setq-default line-spacing 0.1)
+(set-face-attribute 'default nil :font "Fira Code" :height 175)
+(setq-default line-spacing 0.0)
 
 (setq custom-safe-themes t)
 (setq custom-theme-load-path
     '("~/.config/emacs/themes/"
-      "~/Documentations/projects/project-gruverboxer/"
+      "/Users/renehuiberts/Documentations/projects/project-gruver-boxer"
       "/Users/renehuiberts/.emacs.d/elpa/base16-theme-20220526.1015/"
       "/Users/renehuiberts/.emacs.d/elpa/gruvbox-theme-20220101.1208/"))
-(load-theme 'custom-gruvbox-dark-soft t)
+(load-theme 'gruverboxer t)
 
 ;; Modeline
 (setq-default
@@ -162,12 +162,24 @@
 (use-package autothemer
     :ensure t)
 
+;;; === Language grammer and semantics ==============================================
+
+(use-package tree-sitter-langs
+    :ensure t)
+
+(use-package tree-sitter
+    :ensure t
+    :after tree-sitter-langs
+    :config
+    (global-tree-sitter-mode)
+    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+(load "~/.config/emacs/custom.el")
+
 ;;; === Editor Configurations ======================================================
 ;; Display line numbers
-(add-hook 'prog-mode-hook 'display-line-numbers-mode +1)
-(add-hook 'elisp-mode-hook 'display-line-numbers-mode +1)
-(add-hook 'latex-mode-hook 'display-line-numbers-mode +1)
 (setq display-line-numbers-type 'relative)
+(global-display-line-numbers-mode +1)
 
 ;; Autopair brackets
 (autopair-global-mode)
@@ -183,7 +195,7 @@
       scroll-up-aggressively 0.01
       scroll-down-aggressively 0.01
       scroll-preserve-screen-position t
-      auto-window-vscroll nil)
+    auto-window-vscroll nil)
 
 ;; === File management / Searching =================================================
 (use-package dired-x
@@ -214,6 +226,7 @@
     (setq default-directory "~/")
     (global-set-key (kbd "M-x") 'smex)
     :config
+    (setq ido-auto-merge-work-directories-length -1)
 	(add-to-list 'ido-ignore-files "\\.DS_Store")
     (ido-yes-or-no-mode 1)
     (ido-ubiquitous-mode 1)
@@ -255,7 +268,8 @@
 		   (python-mode . lsp)
            (java-mode . lsp)
 		   (web-mode . lsp)
-		   (json-mode . lsp))
+		   (json-mode . lsp)
+           (latex-mode . lsp))
     :config
     (setq lsp-headerline-breadcrumb-enable nil)
     (setq lsp-auto-guess-root t)
@@ -270,7 +284,9 @@
     (lsp-ui-sideline-show-diagnostics t))
 
 ;; C syntax
-(setq c-default-style '((c-mode . "linux")))
+(setq c-default-style '((c++-mode . "linux")
+                        (c++-mode . "stroustrup")))
+(c-set-offset 'substatement-open 0)
 
 (use-package yasnippet
     :ensure t
@@ -280,10 +296,15 @@
     (yas-global-mode 1))
 
 ;; Auto-completion
+(use-package company-php
+    :defer
+    :after company)
+
 (require 'company-c-headers)
 (use-package company
+    :ensure t
     :init
-    (setq company-backends '((company-capf company-c-headers company-glsl)))
+    (setq company-backends '((company-capf company-c-headers company-glsl company-ac-php-backend)))
     :bind (:map company-active-map
         ("C-n" . company-select-next)
         ("C-p" . company-select-previous)
@@ -296,10 +317,16 @@
                    "/Library/Developer/CommandLineTools/usr/include/c++/v1"))
     (global-company-mode t))
 
-;;; === Language Specific Configurations ===========================================
+
+
+;;; === Language Specific Configurations ============================================
 (use-package racket-mode
     :ensure t
     :hook (racket-mode . racket-xp-mode))
+
+(use-package php-mode
+    :ensure t
+    :mode (("\\.php\\'" . php-mode)))
 
 (use-package web-mode
   :ensure t
@@ -353,15 +380,13 @@
     :config
     (evil-collection-init))
 
+;; Quality of life
+(global-set-key (kbd "C-x C-o") 'ff-find-other-file)
+
 ;;; === Writing & Documentation  ===================================================
-;; Whitespace's and concentrations mode
-(use-package olivetti
-    :ensure t
-    :init
-    (add-hook 'org-mode-hook 'olivetti-mode 1)
-    :custom
-    (olivetti-enable-borders t)
-    (olivetti-body-width 76))
+
+;; Markdown mode
+(setq markdown-command "/usr/local/bin/pandoc")
 
 ;; Deletions and indentation
 (use-package hungry-delete
@@ -420,13 +445,13 @@
     (org-roam-setup))
 
 ;; LATEX
-;; Flyspell dubble tap fix
-(eval-after-load "flyspell"
-  '(progn
-     (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
-       (define-key flyspell-mouse-map [mouse-3] #'undefined)))
-
-(latex-preview-pane-enable)
+(use-package lsp-ltex
+    :ensure t
+    :init
+    (setq lsp-ltex-version "14.0.0")
+    :hook (latex-mode . (lambda ()
+                        (require 'lsp-ltex)
+                        (lsp))))  
 
 ;; Display fill column indicator
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
@@ -436,7 +461,7 @@
 (add-hook 'org-mode-hook 'visual-line-mode)
 
 (set-face-background 'fill-column-indicator "#3c3836")
-(setq-default display-fill-column-indicator-column 84)
+(setq-default display-fill-column-indicator-column 85)
 (setq-default display-fill-column-indicator-character '32)
 
 ;; Auto wrap
@@ -598,13 +623,15 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+    '(ansi-color-names-vector
+         ["#3c3836" "#fb4933" "#b8bb26" "#fabd2f" "#83a598" "#d3869b" "#8ec07c" "#ebdbb2"])
  '(highlight-indent-guides-method 'column)
     '(package-selected-packages
-         '(ido-yes-or-no-mode ido-yes-or-no 'yasnippet 'yasnippet gruvbox-theme base16-theme org-roam hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane centered-window olivetti writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex)))
+         '(pdf-tools restart-emacs company-php php-mode lsp-ltex clang-format tree-sitter-langs tree-sitter ido-yes-or-no-mode ido-yes-or-no 'yasnippet 'yasnippet gruvbox-theme base16-theme org-roam hl-todo yasnippet racket-mode sly company-capf package-list ccls unicode-fonts highlight-indent-guides evil-collection eglot flycheck-pkg-config company-irony irony editorconfig buffer-move omnisharp csharp-mode lsp-python-ms company-glsl glsl-mode hungry-delete web-mode json-mode lsp-javacomp tide typescript-mode lsp-mode latex-preview-pane centered-window writeroom-mode platformio-mode magit lua-mode use-package flycheck exec-path-from-shell evil company-c-headers autopair company smex))
+ '(show-paren-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
